@@ -24,6 +24,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/leaves',        label: 'Leaves',         icon: '🏖️' },
   { href: '/notifications', label: 'Alerts',         icon: '📱' },
   { href: '/analytics',     label: 'Analytics',      icon: '📊' },
+  { href: '/dashboard/settings', label: 'Settings',   icon: '⚙️' },
 ]
 
 const TEACHER_NAV: NavItem[] = [

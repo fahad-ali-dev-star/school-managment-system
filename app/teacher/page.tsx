@@ -1,17 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { parseClassAssigned } from '@/lib/teacherAccess'
+import { getProfile } from '@/lib/supabase/getProfile'
 
 export default async function TeacherDashboard() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase.from('users').select('school_id, full_name').eq('id', user.id).single()
+  const profile = await getProfile()
   if (!profile) redirect('/login')
 
+  const supabase = createClient()
+
   const { data: teacherRow } = await supabase.from('teachers')
-    .select('class_assigned, subject, full_name').eq('email', user.email!).eq('school_id', profile.school_id).single()
+    .select('class_assigned, subject, full_name').eq('email', profile.email).eq('school_id', profile.school_id).single()
 
   const classAssigned = teacherRow?.class_assigned ?? ''
   const { class_name, section } = parseClassAssigned(classAssigned)

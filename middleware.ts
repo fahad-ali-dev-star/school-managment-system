@@ -49,10 +49,19 @@ export async function middleware(request: NextRequest) {
 
   // Role enforcement: /teacher/* only for teachers, /parent/* only for parents
   if (user && (pathname.startsWith('/teacher') || pathname.startsWith('/parent') || pathname.startsWith('/dashboard') || pathname.startsWith('/students') || pathname.startsWith('/attendance') || pathname.startsWith('/fees') || pathname.startsWith('/classes') || pathname.startsWith('/teachers') || pathname.startsWith('/exams') || pathname.startsWith('/report-cards') || pathname.startsWith('/leaves') || pathname.startsWith('/notifications') || pathname.startsWith('/analytics') || pathname.startsWith('/parents'))) {
-    const { data: profile } = await supabase
-      .from('users').select('role').eq('id', user.id).single()
+    
+    // 1. Try to get role from cookie first (Fastest)
+    let role = request.cookies.get('user-role')?.value
 
-    const role = profile?.role
+    // 2. If no cookie, fetch from DB and set cookie (Fallback)
+    if (!role) {
+      const { data: profile } = await supabase
+        .from('users').select('role').eq('id', user.id).single()
+      role = profile?.role
+      if (role) {
+        response.cookies.set('user-role', role, { path: '/', maxAge: 60 * 60 * 24 * 7 })
+      }
+    }
 
     // Teacher trying to access admin routes
     if (role === 'teacher' && !(pathname.startsWith('/teacher/') || pathname === '/teacher') && !pathname.startsWith('/api/')) {

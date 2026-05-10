@@ -1,15 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import ParentsManager from './ParentsManager'
+import { getProfile } from '@/lib/supabase/getProfile'
 
 export default async function ParentsPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const profile = await getProfile()
+  if (!profile) redirect('/login')
 
-  const { data: profile } = await supabase.from('users').select('school_id, role').eq('id', user.id).single()
-  if (!profile || !['admin', 'principal'].includes(profile.role)) redirect('/dashboard')
+  if (!['admin', 'principal'].includes(profile.role)) redirect('/dashboard')
 
   const admin = createAdminClient()
 

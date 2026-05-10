@@ -1,15 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import StudentsList from './StudentsList'
+import { getProfile } from '@/lib/supabase/getProfile'
+import { createClient } from '@/lib/supabase/server'
 
 export default async function StudentsPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('users').select('school_id').eq('id', user.id).single()
+  const profile = await getProfile()
   if (!profile) redirect('/login')
+
+  const supabase = createClient()
 
   const [{ data: students }, { data: classes }] = await Promise.all([
     supabase.from('students').select('*')

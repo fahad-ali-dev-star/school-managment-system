@@ -33,9 +33,9 @@ export default function LoginPage() {
       const { data: profile } = await supabase2.from('users').select('role').eq('id', data.session.user.id).single()
       const userRole = profile?.role
       
-      // Basic role mismatch check (optional, but good for UX)
-      if (roleSelection === 'teacher' && userRole !== 'teacher') {
-         // Not strictly required since middleware will redirect, but good for feedback
+      // Store role in cookie for middleware performance optimization
+      if (userRole) {
+        document.cookie = `user-role=${userRole}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
       }
 
       const dest = userRole === 'teacher' ? '/teacher' : userRole === 'parent' ? '/parent' : '/dashboard'
