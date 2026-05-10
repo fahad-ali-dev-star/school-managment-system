@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import ParentsManager from './ParentsManager'
 import { getProfile } from '@/lib/supabase/getProfile'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ParentsPage() {
   const profile = await getProfile()
   if (!profile) redirect('/login')

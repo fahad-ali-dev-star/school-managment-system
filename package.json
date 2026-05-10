@@ -6,13 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "onboard": "node scripts/onboard-school.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.3.0",
     "@supabase/supabase-js": "^2.104.1",
     "jspdf": "^4.2.1",
-    "recharts": "^2.10.3",
     "next": "^14.2.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

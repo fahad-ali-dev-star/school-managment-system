@@ -17,7 +17,7 @@ export default async function FeesPage() {
       .eq('school_id', profile.school_id)
       .order('created_at', { ascending: false }).limit(200),
     supabase.from('students')
-      .select('id, full_name, roll_number, class_name')
+      .select('id, full_name, roll_number, class_name, fee_status')
       .eq('school_id', profile.school_id).eq('is_active', true).order('class_name'),
   ])
 

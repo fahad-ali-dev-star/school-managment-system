@@ -1,10 +1,11 @@
+import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], display: 'swap' })
 
 export const metadata: Metadata = {
-  title: 'Beacon Light School ERP',
+  title: 'School Management System ERP',
   description: 'Complete School Management Solution',
 }
 

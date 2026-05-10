@@ -12,10 +12,6 @@ export default async function AnalyticsPage() {
   if (!profile) redirect('/login')
 
   // Fetch all analytics data server-side
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL ? `http://localhost:3000` : 'http://localhost:3000'}/api/analytics`,
-    { cache: 'no-store', headers: { cookie: '' } }
-  )
 
   // Fallback: fetch directly from supabase for SSR
   const sid = profile.school_id

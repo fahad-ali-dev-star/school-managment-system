@@ -3,6 +3,8 @@ import Sidebar from '@/components/Sidebar'
 import { getProfile } from '@/lib/supabase/getProfile'
 import type { AuthUser } from '@/types'
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const profile = await getProfile()
 

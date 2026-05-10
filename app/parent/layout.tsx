@@ -1,24 +1,18 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { getProfile } from '@/lib/supabase/getProfile'
 import Sidebar from '@/components/Sidebar'
 import type { AuthUser } from '@/types'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ParentPortalLayout({ children }: { children: React.ReactNode }) {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('users').select('id, school_id, full_name, email, role').eq('id', user.id).single()
+  const profile = await getProfile()
   if (!profile || profile.role !== 'parent') redirect('/login')
-
-  const { data: school } = await supabase.from('schools').select('name').eq('id', profile.school_id).single()
 
   const authUser: AuthUser = {
     id: profile.id, school_id: profile.school_id,
     full_name: profile.full_name, email: profile.email,
     role: 'parent',
-    school_name: school?.name ?? 'Beacon Light School',
+    school_name: profile.school_name ?? 'School Management System',
   }
 
   return (

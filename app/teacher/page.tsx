@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { parseClassAssigned } from '@/lib/teacherAccess'
 import { getProfile } from '@/lib/supabase/getProfile'
 
+export const dynamic = 'force-dynamic'
+
 export default async function TeacherDashboard() {
   const profile = await getProfile()
   if (!profile) redirect('/login')

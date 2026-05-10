@@ -1,18 +1,19 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getProfile } from '@/lib/supabase/getProfile'
+import { createClient } from '@/lib/supabase/server'
+
+export const dynamic = 'force-dynamic'
 
 export default async function ParentDashboard() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase.from('users').select('school_id, full_name').eq('id', user.id).single()
+  const profile = await getProfile()
   if (!profile) redirect('/login')
+
+  const supabase = createClient()
 
   const { data: children } = await supabase.from('students')
     .select('id, full_name, roll_number, class_name, section, fee_status, gender')
     .eq('school_id', profile.school_id)
-    .ilike('parent_email', user.email!)
+    .ilike('parent_email', profile.email)
     .eq('is_active', true)
     .order('class_name')
 

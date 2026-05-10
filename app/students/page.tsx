@@ -3,6 +3,8 @@ import StudentsList from './StudentsList'
 import { getProfile } from '@/lib/supabase/getProfile'
 import { createClient } from '@/lib/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
 export default async function StudentsPage() {
   const profile = await getProfile()
   if (!profile) redirect('/login')

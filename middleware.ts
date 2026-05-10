@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
   const isLogin = pathname === '/login'
 
   // Public paths that don't require auth
-  const isPublic = isLogin || pathname === '/' || pathname.startsWith('/api/')
+  const isPublic = isLogin || pathname === '/' || pathname === '/super-admin' || pathname.startsWith('/api/')
 
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL('/login', request.url))

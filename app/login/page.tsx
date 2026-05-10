@@ -89,7 +89,7 @@ export default function LoginPage() {
         </div>
 
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-          Beacon Light School
+          School Management System
         </h1>
         <p style={{ color: '#64748b', fontSize: 14, marginTop: 4, marginBottom: '1.75rem' }}>
           {roleSelection ? `Sign in as ${roleSelection.charAt(0).toUpperCase() + roleSelection.slice(1)}` : 'Select your portal to continue'}
@@ -166,7 +166,7 @@ export default function LoginPage() {
         )}
 
         <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: 12, color: '#94a3b8' }}>
-          Beacon Light School ERP
+          School Management System ERP
         </p>
       </div>
     </div>

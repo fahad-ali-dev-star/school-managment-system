@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getProfile } from '@/lib/supabase/getProfile'
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardPage() {
   const profile = await getProfile()
   if (!profile) redirect('/login')
