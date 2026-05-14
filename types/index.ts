@@ -1,10 +1,18 @@
 export type UserRole = 'principal' | 'teacher' | 'admin' | 'parent'
 
 export interface School {
-  id: string; name: string; address: string; phone: string; logo_url?: string; created_at: string
+  id: string; 
+  name: string; 
+  address: string; 
+  phone: string; 
+  logo_url?: string; 
+  created_at: string;
+  plan?: string;
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
 }
 export interface AuthUser {
-  id: string; school_id: string; full_name: string; email: string; role: UserRole; school_name: string
+  id: string; school_id: string; full_name: string; email: string; role: UserRole; school_name: string; plan: string
 }
 export interface Student {
   id: string; school_id: string; roll_number: string; full_name: string

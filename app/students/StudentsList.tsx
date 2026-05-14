@@ -2,6 +2,8 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Student } from '@/types'
+import { PLAN_LIMITS, PlanType } from '@/lib/plans'
+import { Lock } from 'lucide-react'
 
 interface ClassOption { id: string; name: string; section: string }
 
@@ -18,11 +20,12 @@ const EMPTY = {
 }
 
 export default function StudentsList({
-  students: init, classes, schoolId,
+  students: init, classes, schoolId, plan = 'free'
 }: {
   students: Student[]
   classes: ClassOption[]
   schoolId: string
+  plan?: string
 }) {
   const [students, setStudents] = useState<Student[]>(init)
   const [search, setSearch]     = useState('')
@@ -43,7 +46,15 @@ export default function StudentsList({
       && (!cls || s.class_name === cls)
   })
 
+  const currentPlan = (plan || 'free') as PlanType
+  const limit = PLAN_LIMITS[currentPlan].maxStudents
+  const isAtLimit = students.length >= limit
+
   function openAdd() {
+    if (isAtLimit) {
+      alert(`Limit Reached: Your ${currentPlan} plan allows up to ${limit} students. Please upgrade to add more.`)
+      return
+    }
     setEditing(null); setForm({ ...EMPTY }); setError(''); setShowForm(true)
   }
 
@@ -108,7 +119,33 @@ export default function StudentsList({
           <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Students</h1>
           <p style={{ color: '#64748b', fontSize: 13, marginTop: 3 }}>{students.length} active students</p>
         </div>
-        <button onClick={openAdd} style={{ padding: '9px 18px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ Add Student</button>
+        <div style={{ display: 'flex', gap: 12 }}>
+          {isAtLimit && (
+            <div style={{ padding: '0.5rem 1rem', background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: 8, color: '#92400e', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Lock size={14} /> Student limit reached ({limit})
+            </div>
+          )}
+          <button 
+            onClick={openAdd} 
+            disabled={isAtLimit}
+            style={{ 
+              padding: '9px 18px', 
+              background: isAtLimit ? '#94a3b8' : '#4f46e5', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: 8, 
+              fontSize: 13, 
+              fontWeight: 600, 
+              cursor: isAtLimit ? 'not-allowed' : 'pointer', 
+              fontFamily: 'inherit',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8
+            }}
+          >
+            {isAtLimit ? 'Limit Reached' : '+ Add Student'}
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: '1.25rem', flexWrap: 'wrap' }}>

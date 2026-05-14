@@ -12,6 +12,15 @@ export async function GET() {
 
   const sid = profile.school_id
 
+  // Check plan limits
+  const { checkFeature } = await import('@/lib/billing/server')
+  const hasAccess = await checkFeature('hasAnalytics')
+  if (!hasAccess) {
+    return NextResponse.json({ 
+      error: 'Analytics is a Professional feature. Please upgrade your plan to access this module.' 
+    }, { status: 403 })
+  }
+
   // ── 1. Overview KPIs ────────────────────────────────────────
   const [
     { count: totalStudents },

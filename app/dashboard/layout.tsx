@@ -19,6 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     email: profile.email,
     role: profile.role as AuthUser['role'],
     school_name: profile.school_name,
+    plan: profile.plan as string
   }
 
   return (

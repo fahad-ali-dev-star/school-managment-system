@@ -46,6 +46,23 @@ export async function POST(req: NextRequest) {
   if (!profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
+  
+  // Check plan limits
+  const { getSchoolPlan, getStudentCount } = await import('@/lib/billing/server')
+  const { PLAN_LIMITS } = await import('@/lib/plans')
+  
+  const plan = await getSchoolPlan()
+  if (!plan) return NextResponse.json({ error: 'Plan not found' }, { status: 403 })
+  
+  const currentCount = await getStudentCount(profile.school_id)
+  const maxAllowed = PLAN_LIMITS[plan].maxStudents
+
+  if (currentCount >= maxAllowed) {
+    return NextResponse.json({ 
+      error: `Your current plan (${plan}) allows only ${maxAllowed} students. Please upgrade to add more.` 
+    }, { status: 403 })
+  }
+
   const { data, error } = await supabase
     .from('students')
     .insert({ ...body, school_id: profile.school_id })

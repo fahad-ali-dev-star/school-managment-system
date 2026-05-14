@@ -5,18 +5,46 @@ export const getProfile = cache(async () => {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) return null
+  if (!user) {
+    console.log('getProfile: No auth user found')
+    return null
+  }
 
-  const { data: profile } = await supabase
+  console.log('getProfile: Fetching profile for user', user.id)
+
+  const { data: profile, error } = await supabase
     .from('users')
-    .select('id, school_id, full_name, email, role, schools(name)')
+    .select(`
+      id, 
+      school_id, 
+      full_name, 
+      email, 
+      role, 
+      schools (
+        name,
+        plan
+      )
+    `)
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
-  if (!profile) return null
+  if (error) {
+    console.error('getProfile: Database error:', error)
+  }
+
+  if (!profile) {
+    console.log('getProfile: No profile row found')
+    return null
+  }
+
+  const schoolData = (profile as any).schools
+  const currentPlan = schoolData?.plan ?? 'free'
+  
+  console.log('getProfile: Profile found for', profile.full_name, '| Plan:', currentPlan)
 
   return {
     ...profile,
-    school_name: (profile as any).schools?.name ?? 'Beacon Light School'
+    school_name: schoolData?.name ?? 'Beacon Light School',
+    plan: currentPlan
   }
 })

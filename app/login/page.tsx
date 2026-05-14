@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
   const [email, setEmail]       = useState('')
@@ -9,6 +10,8 @@ export default function LoginPage() {
   const [loading, setLoading]   = useState(false)
   const [roleSelection, setRoleSelection] = useState<'admin' | 'teacher' | 'parent' | null>(null)
   const [error, setError]       = useState('')
+  const searchParams = useSearchParams()
+  const isSignup = searchParams.get('signup') === 'true'
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -163,6 +166,23 @@ export default function LoginPage() {
               </button>
             </form>
           </>
+        )}
+
+        {isSignup && !roleSelection && (
+          <div style={{ 
+            marginTop: '1.5rem', 
+            padding: '1rem', 
+            background: '#f0fdfa', 
+            border: '1px solid #ccfbf1', 
+            borderRadius: 12,
+            color: '#0d9488',
+            fontSize: 13,
+            lineHeight: 1.5
+          }}>
+            <strong>Want to join BeaconERP?</strong><br />
+            We currently onboard new schools manually to ensure the best setup. 
+            Please contact us at <strong>sales@beaconerp.com</strong> for a demo account.
+          </div>
         )}
 
         <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: 12, color: '#94a3b8' }}>

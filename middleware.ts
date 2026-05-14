@@ -34,26 +34,33 @@ export async function middleware(request: NextRequest) {
   const isPublic = isLogin || pathname === '/' || pathname === '/super-admin' || pathname.startsWith('/api/')
 
   if (!user && !isPublic) {
+    console.log('Middleware: No user, redirecting to /login from', pathname)
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   if (user && isLogin) {
-    // Determine where to redirect based on role
-    const { data: profile } = await supabase
-      .from('users').select('role').eq('id', user.id).single()
+    console.log('Middleware: User on /login, fetching role for redirect...')
+    const { data: profile, error } = await supabase
+      .from('users').select('role').eq('id', user.id).maybeSingle()
 
-    if (profile?.role === 'teacher') return NextResponse.redirect(new URL('/teacher', request.url))
-    if (profile?.role === 'parent')  return NextResponse.redirect(new URL('/parent', request.url))
+    if (error || !profile) {
+      console.log('Middleware: No profile found for user, staying on login')
+      // Optional: Sign out if no profile exists to clear the stuck session
+      // await supabase.auth.signOut() 
+      return response
+    }
+
+    console.log('Middleware: User role is', profile.role)
+    if (profile.role === 'teacher') return NextResponse.redirect(new URL('/teacher', request.url))
+    if (profile.role === 'parent')  return NextResponse.redirect(new URL('/parent', request.url))
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Role enforcement: /teacher/* only for teachers, /parent/* only for parents
+  // Role enforcement
   if (user && (pathname.startsWith('/teacher') || pathname.startsWith('/parent') || pathname.startsWith('/dashboard') || pathname.startsWith('/students') || pathname.startsWith('/attendance') || pathname.startsWith('/fees') || pathname.startsWith('/classes') || pathname.startsWith('/teachers') || pathname.startsWith('/exams') || pathname.startsWith('/report-cards') || pathname.startsWith('/leaves') || pathname.startsWith('/notifications') || pathname.startsWith('/analytics') || pathname.startsWith('/parents'))) {
     
-    // 1. Try to get role from cookie first (Fastest)
     let role = request.cookies.get('user-role')?.value
 
-    // 2. If no cookie, fetch from DB and set cookie (Fallback)
     if (!role) {
       const { data: profile } = await supabase
         .from('users').select('role').eq('id', user.id).single()
@@ -63,16 +70,16 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Teacher trying to access admin routes
     if (role === 'teacher' && !(pathname.startsWith('/teacher/') || pathname === '/teacher') && !pathname.startsWith('/api/')) {
+      console.log('Middleware: Teacher accessing admin route, redirecting to /teacher')
       return NextResponse.redirect(new URL('/teacher', request.url))
     }
-    // Parent trying to access admin/teacher routes
     if (role === 'parent' && !(pathname.startsWith('/parent/') || pathname === '/parent') && !pathname.startsWith('/api/')) {
+      console.log('Middleware: Parent accessing admin/teacher route, redirecting to /parent')
       return NextResponse.redirect(new URL('/parent', request.url))
     }
-    // Admin/principal trying to access teacher/parent portals
     if ((role === 'admin' || role === 'principal') && (pathname.startsWith('/teacher/') || pathname === '/teacher' || pathname.startsWith('/parent/') || pathname === '/parent')) {
+      console.log('Middleware: Admin accessing portal route, redirecting to /dashboard')
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   }

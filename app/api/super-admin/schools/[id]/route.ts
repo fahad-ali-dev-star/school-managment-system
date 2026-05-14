@@ -80,3 +80,36 @@ export async function DELETE(
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const schoolId = params.id
+  const admin = createAdminClient()
+  const body = await req.json()
+
+  try {
+    const { name, address, plan } = body
+    
+    const { error } = await admin
+      .from('schools')
+      .update({ 
+        name, 
+        address, 
+        plan: plan?.toLowerCase() 
+      })
+      .eq('id', schoolId)
+
+    if (error) throw error
+
+    return NextResponse.json({ success: true })
+  } catch (err: any) {
+    console.error('School Update Error:', err.message)
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
+}

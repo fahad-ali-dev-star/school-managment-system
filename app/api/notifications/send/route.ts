@@ -14,6 +14,15 @@ export async function POST(req: NextRequest) {
   const { data: school } = await supabase
     .from('schools').select('name').eq('id', profile.school_id).single()
 
+  // Check plan limits
+  const { checkFeature } = await import('@/lib/billing/server')
+  const hasAccess = await checkFeature('hasAlerts')
+  if (!hasAccess) {
+    return NextResponse.json({ 
+      error: 'SMS/WhatsApp alerts are a Professional feature. Please upgrade your plan to access this module.' 
+    }, { status: 403 })
+  }
+
   const body = await req.json()
   const { student_id, type, channel, custom_message, variables } = body
 

@@ -27,6 +27,7 @@ export default async function StudentsPage() {
       students={students ?? []}
       classes={classes ?? []}
       schoolId={profile.school_id}
+      plan={profile.plan}
     />
   )
 }

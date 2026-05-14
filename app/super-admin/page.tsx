@@ -12,6 +12,7 @@ interface School {
   created_at: string
   user_count?: number
   student_count?: number
+  plan?: string
 }
 
 export default function SuperAdminPage() {
@@ -31,7 +32,8 @@ export default function SuperAdminPage() {
     phone: '',
     principalName: '',
     email: '',
-    password: 'School@' + new Date().getFullYear()
+    password: 'School@' + new Date().getFullYear(),
+    plan: 'free'
   })
 
   useEffect(() => {
@@ -73,7 +75,7 @@ export default function SuperAdminPage() {
         alert(`School created successfully!\n\nEmail: ${formData.email}\nPassword: ${formData.password}`)
         setIsModalOpen(false)
         fetchSchools()
-        setFormData({ ...formData, name: '', address: '', phone: '', email: '', principalName: '' })
+        setFormData({ ...formData, name: '', address: '', phone: '', email: '', principalName: '', plan: 'free' })
       } else {
         alert('Error: ' + result.error)
       }
@@ -162,7 +164,21 @@ export default function SuperAdminPage() {
               <div key={school.id} className="school-card">
                 <div className="school-icon">🏫</div>
                 <div className="school-info">
-                  <h3>{school.name}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                    <h3 style={{ margin: 0 }}>{school.name}</h3>
+                    <span style={{ 
+                      fontSize: '0.75rem', 
+                      padding: '2px 8px', 
+                      borderRadius: '12px', 
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      background: school.plan?.toLowerCase() === 'pro' ? '#f5f3ff' : school.plan?.toLowerCase() === 'basic' ? '#ecfdf5' : '#f1f5f9',
+                      color: school.plan?.toLowerCase() === 'pro' ? '#4f46e5' : school.plan?.toLowerCase() === 'basic' ? '#10b981' : '#64748b',
+                      border: `1px solid ${school.plan?.toLowerCase() === 'pro' ? '#ddd6fe' : school.plan?.toLowerCase() === 'basic' ? '#a7f3d0' : '#e2e8f0'}`
+                    }}>
+                      {school.plan || 'free'}
+                    </span>
+                  </div>
                   <div className="school-meta">
                     <span>📍 {school.address}</span>
                     <span>📞 {school.phone}</span>
@@ -263,6 +279,19 @@ export default function SuperAdminPage() {
                 </div>
               </div>
 
+              <div className="form-group">
+                <label className="form-label">Subscription Plan</label>
+                <select 
+                  className="form-input"
+                  value={formData.plan}
+                  onChange={e => setFormData({...formData, plan: e.target.value})}
+                >
+                  <option value="free">Free Plan</option>
+                  <option value="basic">Basic Plan</option>
+                  <option value="pro">Professional Plan</option>
+                </select>
+              </div>
+
               <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.875rem' }} disabled={loading}>
                 {loading ? 'Processing...' : 'Complete Onboarding'}
               </button>
@@ -301,16 +330,49 @@ export default function SuperAdminPage() {
 
               <div className="form-group">
                 <label className="form-label">Update School Name</label>
-                <input className="form-input" defaultValue={editingSchool.name} />
+                <input className="form-input" defaultValue={editingSchool.name} id="edit-name" />
               </div>
               <div className="form-group">
                 <label className="form-label">Update Address</label>
-                <input className="form-input" defaultValue={editingSchool.address} />
+                <input className="form-input" defaultValue={editingSchool.address} id="edit-address" />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Update Subscription Plan</label>
+                <select className="form-input" defaultValue={editingSchool.plan || 'free'} id="edit-plan">
+                  <option value="free">Free Plan</option>
+                  <option value="basic">Basic Plan</option>
+                  <option value="pro">Professional Plan</option>
+                </select>
               </div>
 
               <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
-                <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => alert('Settings updated (Mockup)')}>
-                  Save Changes
+                <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} onClick={async () => {
+                  const name = (document.getElementById('edit-name') as HTMLInputElement)?.value;
+                  const address = (document.getElementById('edit-address') as HTMLInputElement)?.value;
+                  const plan = (document.getElementById('edit-plan') as HTMLSelectElement)?.value;
+                  
+                  setLoading(true);
+                  try {
+                    const res = await fetch(`/api/super-admin/schools/${editingSchool.id}?key=${key}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ name, address, plan })
+                    });
+                    if (res.ok) {
+                      alert('School updated successfully!');
+                      setEditingSchool(null);
+                      fetchSchools();
+                    } else {
+                      alert('Failed to update school');
+                    }
+                  } catch (err) {
+                    alert('Network error');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}>
+                  {loading ? 'Saving...' : 'Save Changes'}
                 </button>
                 <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => window.open(`/dashboard?school=${editingSchool.id}`, '_blank')}>
                   View Portal

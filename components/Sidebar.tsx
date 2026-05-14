@@ -4,6 +4,9 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useTransition, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { AuthUser } from '@/types'
+import { Lock } from 'lucide-react'
+import PlanGate from './PlanGate'
+import { PlanType, canAccess } from '@/lib/plans'
 
 export interface NavItem {
   href: string
@@ -68,6 +71,7 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
   const nav = navItems ?? navForRole(user.role)
   const initials = user.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
   const rc = ROLE_COLOR[user.role] ?? ROLE_COLOR.admin
+  const currentPlan = (user.plan?.toLowerCase() || 'free') as PlanType
 
   // Close drawer on route change
   useEffect(() => { setOpen(false) }, [pathname])
@@ -103,7 +107,40 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
             </svg>
           </div>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{user.school_name}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>{user.school_name}</p>
+              <span style={{ 
+                fontSize: 9, 
+                fontWeight: 700, 
+                padding: '1px 5px', 
+                borderRadius: 4, 
+                textTransform: 'uppercase',
+                background: currentPlan === 'pro' ? '#f5f3ff' : currentPlan === 'basic' ? '#ecfdf5' : '#f1f5f9',
+                color: currentPlan === 'pro' ? '#4f46e5' : currentPlan === 'basic' ? '#10b981' : '#64748b',
+                border: `1px solid ${currentPlan === 'pro' ? '#ddd6fe' : currentPlan === 'basic' ? '#a7f3d0' : '#e2e8f0'}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4
+              }}>
+                {currentPlan}
+                <button 
+                  onClick={() => router.refresh()} 
+                  title="Sync Plan Status"
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    padding: 0, 
+                    cursor: 'pointer', 
+                    fontSize: 10,
+                    opacity: 0.6,
+                    color: 'inherit',
+                    display: 'flex'
+                  }}
+                >
+                  🔄
+                </button>
+              </span>
+            </div>
             <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>School ERP</p>
           </div>
         </div>
@@ -114,8 +151,24 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
         {nav.map(item => {
           const active    = pathname === item.href || pathname.startsWith(item.href + '/')
           const isLoading = loadingHref === item.href
-          return (
-            <button key={item.href} onClick={() => handleNavClick(item.href)} style={{
+
+          // Determine if this item needs gating
+          let gatedFeature: any = null
+          if (item.href === '/exams') gatedFeature = 'hasExams'
+          if (item.href === '/report-cards') gatedFeature = 'hasExams'
+          if (item.href === '/parents' || item.href.startsWith('/parent')) gatedFeature = 'hasParentPortal'
+          if (item.href === '/attendance') gatedFeature = 'hasAttendance'
+          if (item.href === '/fees') gatedFeature = 'hasFees'
+          if (item.href === '/leaves') gatedFeature = 'hasLeaves'
+          if (item.href === '/notifications') gatedFeature = 'hasAlerts'
+          if (item.href === '/analytics') gatedFeature = 'hasAnalytics'
+
+          if (gatedFeature && !canAccess(currentPlan, gatedFeature)) {
+            return null
+          }
+
+          const buttonContent = (
+            <button key={item.href} onClick={() => gatedFeature && !canAccess(currentPlan, gatedFeature) ? null : handleNavClick(item.href)} style={{
               display: 'flex', alignItems: 'center', gap: 10, width: '100%',
               padding: '9px 12px', borderRadius: 8, marginBottom: 2,
               background: active ? '#eef2ff' : 'transparent',
@@ -124,11 +177,13 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
               fontSize: 14, border: 'none', cursor: 'pointer',
               fontFamily: 'inherit', transition: 'background 0.15s',
               justifyContent: 'space-between',
+              opacity: gatedFeature && !canAccess(currentPlan, gatedFeature) ? 0.6 : 1
             }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 16 }}>{item.icon}</span>
                 {item.label}
               </span>
+              {gatedFeature && !canAccess(currentPlan, gatedFeature) && <Lock size={12} style={{ color: '#94a3b8' }} />}
               {isLoading && (
                 <span style={{
                   width: 14, height: 14, border: '2px solid #e2e8f0',
@@ -139,6 +194,16 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
               )}
             </button>
           )
+
+          if (gatedFeature) {
+            return (
+              <PlanGate key={item.href} currentPlan={currentPlan} feature={gatedFeature} fallback={buttonContent}>
+                {buttonContent}
+              </PlanGate>
+            )
+          }
+
+          return buttonContent
         })}
       </nav>
 

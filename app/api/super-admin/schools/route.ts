@@ -71,7 +71,12 @@ export async function POST(req: NextRequest) {
     // 1. Create School
     const { data: school, error: schoolError } = await supabase
       .from('schools')
-      .insert([{ name: school_name, address: school_address, phone: school_phone }])
+      .insert([{ 
+        name: school_name, 
+        address: school_address, 
+        phone: school_phone,
+        plan: (body.plan || 'free').toLowerCase()
+      }])
       .select()
       .single()
 

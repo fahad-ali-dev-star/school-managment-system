@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import SettingsForm from './SettingsForm'
+import BillingManager from '@/components/BillingManager'
 
 export default async function SettingsPage() {
   const supabase = createClient()
@@ -25,7 +26,7 @@ export default async function SettingsPage() {
   // Fetch school details
   const { data: school } = await supabase
     .from('schools')
-    .select('name')
+    .select('name, plan')
     .eq('id', profile.school_id)
     .single()
 
@@ -45,6 +46,10 @@ export default async function SettingsPage() {
         initialSchoolName={school?.name ?? ''}
         schoolId={profile.school_id}
       />
+
+      <div style={{ marginTop: '3rem' }}>
+        <BillingManager schoolId={profile.school_id} currentPlan={school?.plan} />
+      </div>
     </div>
   )
 }
