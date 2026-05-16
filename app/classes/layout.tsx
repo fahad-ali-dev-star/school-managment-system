@@ -1,27 +1,18 @@
-import { createClient } from '@/lib/supabase/server'
+import { getProfile } from '@/lib/supabase/getProfile'
 import { redirect } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
 import type { AuthUser } from '@/types'
 
 export default async function ClassesLayout({ children }: { children: React.ReactNode }) {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('users').select('id, school_id, full_name, email, role').eq('id', user.id).single()
+  const profile = await getProfile()
   if (!profile) redirect('/login')
 
-  const { data: school } = await supabase
-    .from('schools').select('name').eq('id', profile.school_id).single()
-
   const authUser: AuthUser = {
-    id: profile.id,
-    school_id: profile.school_id,
-    full_name: profile.full_name,
-    email: profile.email,
+    id: profile.id, school_id: profile.school_id,
+    full_name: profile.full_name, email: profile.email,
     role: profile.role as AuthUser['role'],
-    school_name: school?.name ?? 'Beacon Light School',
+    school_name: profile.school_name ?? 'Beacon Light School',
+    plan: profile.plan as string
   }
 
   return (

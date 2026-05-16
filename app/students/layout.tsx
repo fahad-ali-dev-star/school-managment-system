@@ -3,7 +3,9 @@ import { redirect } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
 import type { AuthUser } from '@/types'
 
-export default async function NotificationsLayout({ children }: { children: React.ReactNode }) {
+export const dynamic = 'force-dynamic'
+
+export default async function StudentsLayout({ children }: { children: React.ReactNode }) {
   const profile = await getProfile()
   if (!profile) redirect('/login')
 
