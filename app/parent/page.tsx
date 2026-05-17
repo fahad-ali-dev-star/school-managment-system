@@ -36,7 +36,7 @@ export default async function ParentDashboard() {
       {(children ?? []).length === 0 ? (
         <div className="card" style={{ padding: '2.5rem', textAlign: 'center', color: '#94a3b8' }}>
           <p style={{ fontSize: 16, marginBottom: 8 }}>No children found</p>
-          <p style={{ fontSize: 13 }}>Your email ({user.email}) is not linked to any student. Please contact the school admin.</p>
+          <p style={{ fontSize: 13 }}>Your email ({profile.email}) is not linked to any student. Please contact the school admin.</p>
         </div>
       ) : (
         <>

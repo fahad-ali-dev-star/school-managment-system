@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { getProfile } from '@/lib/supabase/getProfile'
 import Sidebar from '@/components/Sidebar'
 import type { AuthUser } from '@/types'
@@ -13,6 +14,7 @@ export default async function ParentPortalLayout({ children }: { children: React
     full_name: profile.full_name, email: profile.email,
     role: 'parent',
     school_name: profile.school_name ?? 'School Management System',
+    plan: profile.plan as string
   }
 
   return (

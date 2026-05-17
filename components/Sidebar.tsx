@@ -1,7 +1,8 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { AuthUser } from '@/types'
 import { Lock } from 'lucide-react'
@@ -64,28 +65,23 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
   const pathname = usePathname()
   const router   = useRouter()
   const supabase = createClient()
-  const [loadingHref, setLoadingHref] = useState<string | null>(null)
-  const [, startTransition]           = useTransition()
   const [open, setOpen]               = useState(false)
+  const [clickedHref, setClickedHref] = useState<string | null>(null)
 
   const nav = navItems ?? navForRole(user.role)
   const initials = user.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
   const rc = ROLE_COLOR[user.role] ?? ROLE_COLOR.admin
   const currentPlan = (user.plan?.toLowerCase() || 'free') as PlanType
 
-  // Close drawer on route change
-  useEffect(() => { setOpen(false) }, [pathname])
+  // Close drawer and reset clicked highlight on route change
+  useEffect(() => {
+    setOpen(false)
+    setClickedHref(null)
+  }, [pathname])
 
   async function logout() {
     await supabase.auth.signOut()
     window.location.href = '/login'
-  }
-
-  function handleNavClick(href: string) {
-    if (href === pathname) return
-    setLoadingHref(href)
-    startTransition(() => { router.push(href) })
-    setTimeout(() => setLoadingHref(null), 3000)
   }
 
   const sidebarContent = (
@@ -149,8 +145,9 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
       {/* Nav */}
       <nav style={{ flex: 1, padding: '0.75rem' }}>
         {nav.map(item => {
-          const active    = pathname === item.href || pathname.startsWith(item.href + '/')
-          const isLoading = loadingHref === item.href
+          const active    = clickedHref
+            ? (clickedHref === item.href)
+            : (pathname === item.href || pathname.startsWith(item.href + '/'))
 
           // Determine if this item needs gating
           let gatedFeature: any = null
@@ -167,43 +164,54 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
             return null
           }
 
+          const isGated = gatedFeature && !canAccess(currentPlan, gatedFeature)
+
+          const linkStyle: React.CSSProperties = {
+            display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+            padding: '9px 12px', borderRadius: 8, marginBottom: 2,
+            background: active ? '#eef2ff' : 'transparent',
+            color: active ? '#4f46e5' : '#475569',
+            fontWeight: active ? 600 : 400,
+            fontSize: 14, border: 'none', cursor: isGated ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit', transition: 'background 0.15s',
+            justifyContent: 'space-between',
+            textDecoration: 'none',
+            boxSizing: 'border-box',
+            opacity: isGated ? 0.6 : 1
+          }
+
           const buttonContent = (
-            <button key={item.href} onClick={() => gatedFeature && !canAccess(currentPlan, gatedFeature) ? null : handleNavClick(item.href)} style={{
-              display: 'flex', alignItems: 'center', gap: 10, width: '100%',
-              padding: '9px 12px', borderRadius: 8, marginBottom: 2,
-              background: active ? '#eef2ff' : 'transparent',
-              color: active ? '#4f46e5' : '#475569',
-              fontWeight: active ? 600 : 400,
-              fontSize: 14, border: 'none', cursor: 'pointer',
-              fontFamily: 'inherit', transition: 'background 0.15s',
-              justifyContent: 'space-between',
-              opacity: gatedFeature && !canAccess(currentPlan, gatedFeature) ? 0.6 : 1
-            }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 16 }}>{item.icon}</span>
-                {item.label}
-              </span>
-              {gatedFeature && !canAccess(currentPlan, gatedFeature) && <Lock size={12} style={{ color: '#94a3b8' }} />}
-              {isLoading && (
-                <span style={{
-                  width: 14, height: 14, border: '2px solid #e2e8f0',
-                  borderTop: '2px solid #4f46e5', borderRadius: '50%',
-                  display: 'inline-block', flexShrink: 0,
-                  animation: 'spin 0.7s linear infinite',
-                }}/>
-              )}
-            </button>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 16 }}>{item.icon}</span>
+              {item.label}
+            </span>
           )
 
-          if (gatedFeature) {
+          if (isGated) {
             return (
-              <PlanGate key={item.href} currentPlan={currentPlan} feature={gatedFeature} fallback={buttonContent}>
+              <button key={item.href} disabled style={linkStyle}>
                 {buttonContent}
-              </PlanGate>
+                <Lock size={12} style={{ color: '#94a3b8' }} />
+              </button>
             )
           }
 
-          return buttonContent
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              style={linkStyle}
+              onClick={() => {
+                if (pathname === item.href) {
+                  return
+                }
+                setClickedHref(item.href)
+                setOpen(false)
+              }}
+            >
+              {buttonContent}
+            </Link>
+          )
         })}
       </nav>
 
@@ -285,6 +293,17 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
         {sidebarContent}
       </div>
 
+      {clickedHref && clickedHref !== pathname && (
+        <div className="main-loading-overlay">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+            <div className="loading-spinner-circle" />
+            <span className="loading-spinner-text">
+              Loading page...
+            </span>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @media (min-width: 769px) {
           .sidebar-desktop { display: block !important; }
@@ -295,6 +314,60 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
           .sidebar-desktop { display: none !important; }
           .sidebar-hamburger { display: flex !important; }
           .sidebar-mobile-drawer { display: block !important; }
+        }
+
+        .main-loading-overlay {
+          position: fixed;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 9999;
+          background: rgba(248, 250, 252, 0.75);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          animation: fadeIn 0.2s ease-out;
+        }
+        @media (min-width: 769px) {
+          .main-loading-overlay {
+            left: 240px;
+          }
+        }
+        @media (max-width: 768px) {
+          .main-loading-overlay {
+            left: 0;
+          }
+        }
+        .loading-spinner-circle {
+          width: 48px;
+          height: 48px;
+          border: 3.5px solid #e2e8f0;
+          border-top-color: #4f46e5;
+          border-radius: 50%;
+          animation: spin-custom 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+        .loading-spinner-text {
+          font-size: 13.5px;
+          font-weight: 600;
+          color: #475569;
+          animation: pulse-text 1.5s ease-in-out infinite;
+          letter-spacing: 0.03em;
+          font-family: inherit;
+        }
+        @keyframes spin-custom {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes pulse-text {
+          0%, 100% { opacity: 0.6; transform: scale(0.98); }
+          50% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
       `}</style>
     </>

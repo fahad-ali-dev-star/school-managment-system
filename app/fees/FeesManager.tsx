@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-interface Student { id: string; full_name: string; roll_number: string; class_name: string }
+interface Student { id: string; full_name: string; roll_number: string; class_name: string; fee_status?: string }
 
 const inp: React.CSSProperties = {
   width: '100%', padding: '8px 12px', border: '1.5px solid #e2e8f0',
@@ -240,14 +240,14 @@ export default function FeesManager({ fees: init, students, schoolId }: { fees: 
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                  {['Roll No', 'Student', 'Class', 'Current Fee Status', 'Actions'].map(h => (
+                  {['Roll No', 'Student', 'Class', 'Current Fee Status', 'Previous Months Records', 'Actions'].map(h => (
                     <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: 12, whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filteredStudents.length === 0
-                  ? <tr><td colSpan={5} style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No students found.</td></tr>
+                  ? <tr><td colSpan={6} style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No students found.</td></tr>
                   : filteredStudents.map((s, i) => (
                     <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 ? '#fafafa' : 'white' }}>
                       <td style={{ padding: '11px 14px', fontFamily: 'monospace', color: '#6366f1', fontWeight: 500 }}>{s.roll_number}</td>
@@ -263,6 +263,49 @@ export default function FeesManager({ fees: init, students, schoolId }: { fees: 
                           <option value="pending">Pending</option>
                           <option value="overdue">Overdue</option>
                         </select>
+                      </td>
+                      <td style={{ padding: '11px 14px' }}>
+                        {(() => {
+                          const studentFees = fees.filter(f => f.student_id === s.id && f.month)
+                            .sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime())
+                          if (studentFees.length === 0) {
+                            return <span style={{ color: '#94a3b8', fontSize: 11 }}>No history</span>
+                          }
+                          return (
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', maxWidth: '320px' }}>
+                              {studentFees.map(f => {
+                                const isPaid = f.status === 'paid'
+                                const isOverdue = f.status === 'overdue'
+                                const bg = isPaid ? '#ecfdf5' : isOverdue ? '#fef2f2' : '#fffbeb'
+                                const color = isPaid ? '#047857' : isOverdue ? '#b91c1c' : '#b45309'
+                                const border = isPaid ? '#a7f3d0' : isOverdue ? '#fecaca' : '#fde68a'
+                                return (
+                                  <span
+                                    key={f.id}
+                                    onClick={() => openEdit(f)}
+                                    title={`Click to edit: ${f.fee_type} fee of Rs ${f.amount}`}
+                                    style={{
+                                      background: bg,
+                                      color,
+                                      border: `1.5px solid ${border}`,
+                                      fontSize: 10,
+                                      fontWeight: 600,
+                                      padding: '2px 8px',
+                                      borderRadius: 12,
+                                      whiteSpace: 'nowrap',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.15s ease',
+                                    }}
+                                  >
+                                    {f.month} ({f.status})
+                                  </span>
+                                )
+                              })}
+                            </div>
+                          )
+                        })()}
                       </td>
                       <td style={{ padding: '11px 14px' }}>
                         <button

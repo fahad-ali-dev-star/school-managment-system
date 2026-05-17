@@ -42,12 +42,61 @@ export default function ParentFees({ fees, children_ }: { fees: any[]; children_
       )}
 
       {children_.length > 0 && (
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-          {children_.filter(c => !selectedChild || c.id === selectedChild).map(c => (
-            <div key={c.id} style={{ background: c.fee_status === 'paid' ? '#f0fdf4' : c.fee_status === 'overdue' ? '#fef2f2' : '#fffbeb', border: `1px solid ${c.fee_status === 'paid' ? '#bbf7d0' : c.fee_status === 'overdue' ? '#fecaca' : '#fde68a'}`, borderRadius: 10, padding: '10px 16px', fontSize: 13 }}>
-              <strong>{c.full_name}</strong> &nbsp;·&nbsp; Fee status: {badge(c.fee_status)}
-            </div>
-          ))}
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 12, marginBottom: '1.5rem' }}>
+          {children_.filter(c => !selectedChild || c.id === selectedChild).map(c => {
+            const childFees = fees.filter(f => f.student_id === c.id && f.month)
+              .sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime())
+            return (
+              <div key={c.id} style={{ 
+                background: c.fee_status === 'paid' ? '#f0fdf4' : c.fee_status === 'overdue' ? '#fef2f2' : '#fffbeb', 
+                border: `1px solid ${c.fee_status === 'paid' ? '#bbf7d0' : c.fee_status === 'overdue' ? '#fecaca' : '#fde68a'}`, 
+                borderRadius: 12, padding: '16px', fontSize: 13 
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: childFees.length > 0 ? 12 : 0, flexWrap: 'wrap', gap: 8 }}>
+                  <div>
+                    <strong style={{ fontSize: 15, color: '#0f172a' }}>{c.full_name}</strong>
+                    <span style={{ color: '#64748b', fontSize: 12, marginLeft: 8 }}>({c.class_name} {c.section})</span>
+                  </div>
+                  <div>
+                    Fee status: {badge(c.fee_status)}
+                  </div>
+                </div>
+                {childFees.length > 0 && (
+                  <div>
+                    <p style={{ margin: '0 0 6px 0', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Previous Months Records</p>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {childFees.map(f => {
+                        const isPaid = f.status === 'paid';
+                        const isOverdue = f.status === 'overdue';
+                        const bg = isPaid ? '#ecfdf5' : isOverdue ? '#fef2f2' : '#fffbeb';
+                        const color = isPaid ? '#047857' : isOverdue ? '#b91c1c' : '#b45309';
+                        const border = isPaid ? '#a7f3d0' : isOverdue ? '#fecaca' : '#fde68a';
+                        return (
+                          <span
+                            key={f.id}
+                            style={{
+                              background: bg,
+                              color,
+                              border: `1.5px solid ${border}`,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              padding: '3px 10px',
+                              borderRadius: 12,
+                              whiteSpace: 'nowrap',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                            }}
+                          >
+                            {f.month} ({f.status})
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
