@@ -1,4 +1,4 @@
-# 🏫  School Managment system ERP
+# 🏫 School Management ERP
 
 A comprehensive, multi-tenant SaaS School Management System built with **Next.js 14**, **Supabase**, and **Stripe**. Designed for school administrators, principals, teachers, and parents.
 
