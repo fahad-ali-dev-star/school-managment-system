@@ -32,53 +32,7 @@ A comprehensive, multi-tenant SaaS School Management System built with **Next.js
 
 ---
 
-## ⚙️ Environment Variables
 
-Create a `.env.local` file in the root of your project. Add the following keys (DO NOT include actual secret values in public repositories):
-
-```env
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-
-# Twilio Configuration (Notifications)
-TWILIO_ACCOUNT_SID=your_twilio_account_sid
-TWILIO_AUTH_TOKEN=your_twilio_auth_token
-TWILIO_WHATSAPP_NUMBER=whatsapp:+1234567890
-TWILIO_SMS_NUMBER=+1234567890
-
-# Super Admin Access
-NEXT_PUBLIC_SUPER_ADMIN_KEY=your_secure_super_admin_key
-
-# Stripe Configuration (Billing & Subscriptions)
-STRIPE_SECRET_KEY=your_stripe_secret_key
-STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-STRIPE_PRICE_BASIC=your_stripe_price_basic_id
-STRIPE_PRICE_PRO=your_stripe_price_pro_id
-
-# Sentry Configuration (Error Tracking)
-SENTRY_AUTH_TOKEN=your_sentry_auth_token
-```
-
----
-
-## 🏃 Getting Started
-
-### 1. Install dependencies
-```bash
-npm install
-```
-
-### 2. Configure Environment Variables
-Copy the keys from the **Environment Variables** section above into a `.env.local` file and fill in your actual credentials.
-
-### 3. Start the development server
-```bash
-npm run dev
-```
-Navigate to `http://localhost:3000` to view the application.
 
 ---
 
