@@ -24,7 +24,7 @@ export default function LandingPage() {
       <nav className="navbar">
         <Link href="/" className="logo">
           <School size={32} />
-          <span>Beacon<span style={{ color: '#0f172a' }}>ERP</span></span>
+          <span>School<span style={{ color: '#0f172a' }}>ERP</span></span>
         </Link>
         <div className="nav-links">
           <a href="#features" className="nav-link">Features</a>
@@ -136,7 +136,7 @@ export default function LandingPage() {
       <footer className="footer">
         <div style={{ marginBottom: '2rem' }}>
           <School size={40} style={{ color: '#4f46e5', margin: '0 auto 1rem' }} />
-          <p style={{ fontWeight: 700, fontSize: '1.25rem', color: '#0f172a' }}>BeaconERP</p>
+          <p style={{ fontWeight: 700, fontSize: '1.25rem', color: '#0f172a' }}>SchoolERP</p>
           <p>© {new Date().getFullYear()} Beacon Light Grammar School. All rights reserved.</p>
         </div>
         <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', fontSize: '0.875rem' }}>
