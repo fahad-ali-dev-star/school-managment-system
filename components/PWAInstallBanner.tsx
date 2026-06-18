@@ -8,19 +8,23 @@ export function PWAInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showBanner, setShowBanner] = useState(false);
 
+  // Detect mobile platform (simple check)
+  const isMobile = typeof window !== 'undefined' && /Mobi|Android|iPhone/.test(navigator.userAgent);
+
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
-      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      // Save the event so it can be triggered later.
       setDeferredPrompt(e);
-      // Update UI notify the user they can install the PWA
-      setShowBanner(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Check if the app is already installed
+    // If app is not installed and on mobile, show banner
+    if (!window.matchMedia('(display-mode: standalone)').matches && isMobile) {
+      setShowBanner(true);
+    }
+
+    // Hide banner if already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setShowBanner(false);
     }
