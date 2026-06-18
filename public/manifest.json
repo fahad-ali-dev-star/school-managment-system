@@ -2,7 +2,7 @@
   "name": "School Management ERP",
   "short_name": "School ERP",
   "description": "Comprehensive School Management Solution",
-  "start_url": "/dashboard",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#1e3a8a",

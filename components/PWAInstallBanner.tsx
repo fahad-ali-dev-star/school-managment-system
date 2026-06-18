@@ -8,51 +8,39 @@ export function PWAInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showBanner, setShowBanner] = useState(false);
 
-  // Detect mobile platform (simple check)
+  // Detect mobile platform (optional)
   const isMobile = typeof window !== 'undefined' && /Mobi|Android|iPhone/.test(navigator.userAgent);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
+      if (isMobile) setShowBanner(true);
     };
-
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    // If app is not installed and on mobile, show banner
-    if (!window.matchMedia('(display-mode: standalone)').matches && isMobile) {
-      setShowBanner(true);
-    }
-
     // Hide banner if already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setShowBanner(false);
     }
-
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  }, []);
+  }, [isMobile]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
-      window.alert('Installation not available. Please use the browser\'s "Add to Home Screen" option.');
+      window.alert('Installation not available. Use the browser\'s "Add to Home Screen" option.');
       return;
     }
     console.log('Install button clicked');
-    // Show the install prompt
     deferredPrompt.prompt();
-    // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
     console.log(`User response to the install prompt: ${outcome}`);
-    // We've used the prompt, and can't use it again
     setDeferredPrompt(null);
     setShowBanner(false);
   };
 
-  const handleDismiss = () => {
-    setShowBanner(false);
-  };
+  const handleDismiss = () => setShowBanner(false);
 
   if (!showBanner) return null;
 
