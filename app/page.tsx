@@ -2,6 +2,7 @@
 'use client'
 
 import Link from 'next/link'
+import { PWAInstallButton } from '@/components/PWAInstallButton'
 import { motion } from 'framer-motion'
 import { 
   Users, 
@@ -30,6 +31,7 @@ export default function LandingPage() {
           <a href="#features" className="nav-link">Features</a>
           <a href="#pricing" className="nav-link">Pricing</a>
           <a href="#about" className="nav-link">About</a>
+          <PWAInstallButton />
           <Link href="/login" className="btn btn-secondary">Login</Link>
           <Link href="/login?signup=true" className="btn btn-primary">Get Started</Link>
         </div>

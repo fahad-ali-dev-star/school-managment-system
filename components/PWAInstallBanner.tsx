@@ -8,24 +8,25 @@ export function PWAInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showBanner, setShowBanner] = useState(false);
 
-  // Detect mobile platform (optional)
-  const isMobile = typeof window !== 'undefined' && /Mobi|Android|iPhone/.test(navigator.userAgent);
-
   useEffect(() => {
+    // Already installed as PWA — hide banner
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      return;
+    }
+
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      if (isMobile) setShowBanner(true);
+      setShowBanner(true); // Show on ALL devices
     };
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    // Hide banner if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setShowBanner(false);
-    }
+    window.addEventListener('appinstalled', () => setShowBanner(false));
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  }, [isMobile]);
+  }, []);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
