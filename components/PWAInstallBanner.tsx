@@ -35,7 +35,11 @@ export function PWAInstallBanner() {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      window.alert('Installation not available. Please use the browser\'s "Add to Home Screen" option.');
+      return;
+    }
+    console.log('Install button clicked');
     // Show the install prompt
     deferredPrompt.prompt();
     // Wait for the user to respond to the prompt
