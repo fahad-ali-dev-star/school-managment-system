@@ -15,7 +15,7 @@ const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: '#37415
 
 const EMPTY = {
   full_name: '', roll_number: '', class_name: '', section: '',
-  gender: 'male', parent_name: '', parent_phone: '', parent_email: '', class_id: '',
+  gender: 'male', date_of_birth: '', parent_name: '', parent_phone: '', parent_email: '', class_id: '',
   fee_status: 'pending',
 }
 
@@ -63,6 +63,7 @@ export default function StudentsList({
     setForm({
       full_name: s.full_name, roll_number: s.roll_number,
       class_name: s.class_name, section: s.section, gender: s.gender,
+      date_of_birth: s.date_of_birth ?? '',
       parent_name: s.parent_name, parent_phone: s.parent_phone,
       parent_email: s.parent_email ?? '', class_id: (s as any).class_id ?? '',
       fee_status: s.fee_status,
@@ -82,6 +83,7 @@ export default function StudentsList({
       const payload = {
         full_name: form.full_name, roll_number: form.roll_number,
         class_name: form.class_name, section: form.section, gender: form.gender,
+        date_of_birth: form.date_of_birth || null,
         parent_name: form.parent_name, parent_phone: form.parent_phone,
         parent_email: form.parent_email || null, class_id: form.class_id || null,
         fee_status: form.fee_status,
@@ -261,6 +263,11 @@ export default function StudentsList({
                     <option value="pending">Pending</option>
                     <option value="overdue">Overdue</option>
                   </select>
+                </div>
+                <div>
+                  <label style={lbl}>Date of Birth (Optional)</label>
+                  <input type="date" style={inp} value={form.date_of_birth}
+                    onChange={e => setForm(f => ({ ...f, date_of_birth: e.target.value }))} />
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10, marginTop: '1.25rem' }}>
