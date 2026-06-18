@@ -9,19 +9,24 @@ export function PWAInstallBanner() {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
+    // Only show on mobile screen widths
+    const isMobileScreen = window.innerWidth <= 768;
+    if (!isMobileScreen) return;
+
     // Already installed as PWA — hide banner
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      return;
-    }
+    if (window.matchMedia('(display-mode: standalone)').matches) return;
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setShowBanner(true); // Show on ALL devices
+      setShowBanner(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', () => setShowBanner(false));
+    window.addEventListener('appinstalled', () => {
+      setShowBanner(false);
+      setDeferredPrompt(null);
+    });
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -29,16 +34,16 @@ export function PWAInstallBanner() {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) {
-      window.alert('Installation not available. Use the browser\'s "Add to Home Screen" option.');
-      return;
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setShowBanner(false);
+      }
+      setDeferredPrompt(null);
+    } else {
+      alert('To install:\n1. Tap the Share icon (⬆) in your browser\n2. Select "Add to Home Screen"\n3. Tap "Add"');
     }
-    console.log('Install button clicked');
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to the install prompt: ${outcome}`);
-    setDeferredPrompt(null);
-    setShowBanner(false);
   };
 
   const handleDismiss = () => setShowBanner(false);
@@ -52,31 +57,78 @@ export function PWAInstallBanner() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 100 }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-50"
+        style={{
+          position: 'fixed',
+          bottom: '1rem',
+          left: '1rem',
+          right: '1rem',
+          zIndex: 9999,
+        }}
       >
-        <div className="bg-slate-900/90 backdrop-blur-md text-white border border-slate-700/50 rounded-2xl p-4 shadow-2xl flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-500/20 flex-shrink-0 animate-pulse">
-              <Sparkles className="w-5 h-5" />
+        <div style={{
+          background: 'rgba(15,23,42,0.95)',
+          backdropFilter: 'blur(12px)',
+          color: '#fff',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '16px',
+          padding: '1rem',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1rem',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+              padding: '0.5rem',
+              borderRadius: '10px',
+              display: 'flex',
+              flexShrink: 0,
+            }}>
+              <Sparkles size={20} />
             </div>
             <div>
-              <h4 className="font-semibold text-sm text-slate-100">Install School ERP</h4>
-              <p className="text-xs text-slate-400">Add to your home screen for quick offline access.</p>
+              <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Install School ERP</div>
+              <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>
+                Add to home screen for quick access
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
             <button
               onClick={handleInstallClick}
-              className="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-medium text-xs px-3 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 shadow-lg shadow-blue-600/30 hover:scale-[1.02]"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.5rem 0.875rem',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
             >
-              <ArrowDownToLine className="w-3.5 h-3.5" />
+              <ArrowDownToLine size={14} />
               Install
             </button>
             <button
               onClick={handleDismiss}
-              className="text-slate-400 hover:text-slate-200 hover:bg-slate-800 p-1.5 rounded-lg transition-colors"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#64748b',
+                cursor: 'pointer',
+                padding: '0.25rem',
+                display: 'flex',
+                alignItems: 'center',
+              }}
             >
-              <X className="w-4 h-4" />
+              <X size={18} />
             </button>
           </div>
         </div>

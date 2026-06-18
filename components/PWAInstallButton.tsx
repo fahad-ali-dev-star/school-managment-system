@@ -5,26 +5,26 @@ import { ArrowDownToLine } from 'lucide-react';
 
 export function PWAInstallButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstallable, setIsInstallable] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
+  const [showButton, setShowButton] = useState(false);
 
   useEffect(() => {
-    // Already installed as PWA — hide button
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstalled(true);
-      return;
-    }
+    // Only show on mobile screen widths
+    const isMobileScreen = window.innerWidth <= 768;
+    if (!isMobileScreen) return;
+
+    // Already installed as PWA — don't show
+    if (window.matchMedia('(display-mode: standalone)').matches) return;
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setIsInstallable(true);
+      setShowButton(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', () => {
-      setIsInstalled(true);
-      setIsInstallable(false);
+      setShowButton(false);
+      setDeferredPrompt(null);
     });
 
     return () => {
@@ -33,32 +33,31 @@ export function PWAInstallButton() {
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) {
-      // Fallback for iOS or browsers that don't support beforeinstallprompt
-      alert('To install: tap the Share button in your browser, then "Add to Home Screen".');
-      return;
+    if (deferredPrompt) {
+      // Trigger native browser install dialog
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setShowButton(false);
+      }
+      setDeferredPrompt(null);
+    } else {
+      // iOS / browsers that don't support beforeinstallprompt
+      alert('To install:\n1. Tap the Share icon (⬆) in your browser\n2. Select "Add to Home Screen"\n3. Tap "Add"');
     }
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setIsInstallable(false);
-      setIsInstalled(true);
-    }
-    setDeferredPrompt(null);
   };
 
-  // Hide if already installed
-  if (isInstalled) return null;
+  if (!showButton) return null;
 
   return (
     <button
+      id="pwa-install-btn"
       onClick={handleInstall}
-      title="Install School ERP App"
       style={{
         display: 'flex',
         alignItems: 'center',
         gap: '0.4rem',
-        background: '#4f46e5',
+        background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
         color: '#fff',
         border: 'none',
         borderRadius: '8px',
@@ -66,14 +65,15 @@ export function PWAInstallButton() {
         fontSize: '0.875rem',
         fontWeight: 600,
         cursor: 'pointer',
-        transition: 'background 0.2s, transform 0.2s',
-        boxShadow: '0 2px 8px rgba(79,70,229,0.3)',
+        transition: 'opacity 0.2s, transform 0.2s',
+        boxShadow: '0 2px 12px rgba(79,70,229,0.4)',
+        whiteSpace: 'nowrap',
       }}
-      onMouseEnter={e => (e.currentTarget.style.background = '#4338ca')}
-      onMouseLeave={e => (e.currentTarget.style.background = '#4f46e5')}
+      onMouseEnter={e => (e.currentTarget.style.opacity = '0.9')}
+      onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
     >
       <ArrowDownToLine size={16} />
-      {isInstallable ? 'Install App' : 'Install App'}
+      Install App
     </button>
   );
 }
