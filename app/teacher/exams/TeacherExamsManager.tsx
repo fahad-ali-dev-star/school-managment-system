@@ -40,7 +40,7 @@ export default function TeacherExamsManager({
   async function openMarksEntry(exam: any) {
     setActiveExam(exam); setView('marks')
     setLoadingStudents(true); setMarksData({})
-    const res = await fetch(`/api/students?class_name=${encodeURIComponent(className)}&section=${encodeURIComponent(section)}`)
+    const res = await fetch(`/api/students?class_name=${encodeURIComponent(exam.class_name)}&section=${encodeURIComponent(exam.section)}`)
     if (res.ok) setStudents(await res.json())
     const mRes = await fetch(`/api/exams/${exam.id}/marks`)
     if (mRes.ok) {

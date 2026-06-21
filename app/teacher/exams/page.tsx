@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { parseClassAssigned } from '@/lib/teacherAccess'
+import { parseAllClassesAssigned } from '@/lib/teacherAccess'
 import TeacherExamsManager from './TeacherExamsManager'
 
 export default async function TeacherExamsPage() {
@@ -14,20 +14,39 @@ export default async function TeacherExamsPage() {
   const { data: teacherRow } = await supabase.from('teachers')
     .select('class_assigned').eq('email', user.email!).eq('school_id', profile.school_id).single()
 
-  const { class_name, section } = parseClassAssigned(teacherRow?.class_assigned ?? '')
+  const assignedClasses = parseAllClassesAssigned(teacherRow?.class_assigned ?? '')
+  const classNames = assignedClasses.map(c => c.class_name).filter(Boolean)
 
-  const { data: exams } = await supabase.from('exams')
+  let examsQuery = supabase.from('exams')
     .select('*, subjects(id, name, total_marks, passing_marks)')
     .eq('school_id', profile.school_id)
-    .eq('class_name', class_name)
     .order('exam_date', { ascending: false })
+
+  if (classNames.length > 0) {
+    examsQuery = examsQuery.in('class_name', classNames)
+  } else {
+    examsQuery = examsQuery.eq('id', '00000000-0000-0000-0000-000000000000') // matches nothing
+  }
+
+  const { data: examsData } = await examsQuery
+
+  const exams = (examsData ?? []).filter(exam => 
+    assignedClasses.some(c => 
+      c.class_name === exam.class_name && 
+      (!c.section || c.section === exam.section)
+    )
+  )
+
+  const displayClass = assignedClasses.length > 1 ? 'Multiple Classes' : (assignedClasses[0]?.class_name || '')
+  const displaySection = assignedClasses.length > 1 ? '' : (assignedClasses[0]?.section || '')
 
   return (
     <TeacherExamsManager
-      exams={exams ?? []}
+      exams={exams}
       schoolId={profile.school_id}
-      className={class_name}
-      section={section}
+      className={displayClass}
+      section={displaySection}
     />
   )
 }
+

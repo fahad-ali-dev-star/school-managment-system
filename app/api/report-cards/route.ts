@@ -41,12 +41,20 @@ export async function GET(req: NextRequest) {
     const { data: teacherRow } = await supabase.from('teachers')
       .select('class_assigned').eq('email', user.email!).eq('school_id', profile.school_id).single()
     if (!teacherRow?.class_assigned) return NextResponse.json({ error: 'No class assigned' }, { status: 403 })
-    const { parseClassAssigned } = await import('@/lib/teacherAccess')
-    const { class_name, section } = parseClassAssigned(teacherRow.class_assigned)
-    if (exam.class_name !== class_name || exam.section !== section) {
+    const { parseAllClassesAssigned } = await import('@/lib/teacherAccess')
+    const classes = parseAllClassesAssigned(teacherRow.class_assigned)
+    
+    const isAllowed = classes.some(c => 
+      c.class_name === exam.class_name && 
+      (!c.section || c.section === exam.section)
+    )
+    if (!isAllowed) {
       return NextResponse.json({ error: 'Forbidden: not your class' }, { status: 403 })
     }
-    studentsQ = studentsQ.eq('class_name', class_name).eq('section', section)
+    studentsQ = studentsQ.eq('class_name', exam.class_name)
+    if (exam.section) {
+      studentsQ = studentsQ.eq('section', exam.section)
+    }
   } else if (profile.role === 'parent') {
     // parent can only see their own children
     studentsQ = studentsQ.eq('parent_email', user.email!)

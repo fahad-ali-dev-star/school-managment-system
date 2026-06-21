@@ -24,16 +24,30 @@ export async function GET(req: NextRequest) {
   if (profile.role === 'teacher') {
     const { data: teacherRow } = await supabase.from('teachers').select('class_assigned').eq('email', user.email!).eq('school_id', profile.school_id).single()
     if (!teacherRow?.class_assigned) return NextResponse.json([])
-    const { parseClassAssigned } = await import('@/lib/teacherAccess')
-    const { class_name: tClass, section: tSection } = parseClassAssigned(teacherRow.class_assigned)
-    query = query.eq('class_name', tClass).eq('section', tSection)
+    const { parseAllClassesAssigned } = await import('@/lib/teacherAccess')
+    const classes = parseAllClassesAssigned(teacherRow.class_assigned)
+    if (classes.length === 0) return NextResponse.json([])
+    query = query.in('class_name', classes.map(c => c.class_name))
   } else if (profile.role === 'parent') {
     query = query.eq('parent_email', user.email!)
   }
 
   const { data, error } = await query.order('roll_number')
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+
+  let finalData = data;
+  if (profile.role === 'teacher') {
+    const { data: teacherRow } = await supabase.from('teachers').select('class_assigned').eq('email', user.email!).eq('school_id', profile.school_id).single()
+    const { parseAllClassesAssigned } = await import('@/lib/teacherAccess')
+    const classes = parseAllClassesAssigned(teacherRow?.class_assigned ?? '')
+    finalData = finalData.filter(student => 
+      classes.some(c => 
+        c.class_name === student.class_name && 
+        (!c.section || c.section === student.section)
+      )
+    )
+  }
+  return NextResponse.json(finalData)
 }
 
 export async function POST(req: NextRequest) {

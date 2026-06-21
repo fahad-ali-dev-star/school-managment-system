@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { parseClassAssigned } from '@/lib/teacherAccess'
+import { parseAllClassesAssigned } from '@/lib/teacherAccess'
 import { getProfile } from '@/lib/supabase/getProfile'
 
 export const dynamic = 'force-dynamic'
@@ -15,21 +15,47 @@ export default async function TeacherDashboard() {
     .select('class_assigned, subject, full_name').eq('email', profile.email).eq('school_id', profile.school_id).single()
 
   const classAssigned = teacherRow?.class_assigned ?? ''
-  const { class_name, section } = parseClassAssigned(classAssigned)
+  const assignedClasses = parseAllClassesAssigned(classAssigned)
+  const classNames = assignedClasses.map(c => c.class_name).filter(Boolean)
   const today = new Date().toISOString().split('T')[0]
 
-  const [{ data: students }, { data: todayAtt }, { data: exams }] = await Promise.all([
-    supabase.from('students').select('id', { count: 'exact', head: false })
-      .eq('school_id', profile.school_id).eq('class_name', class_name).eq('section', section).eq('is_active', true),
-    supabase.from('attendance').select('status')
+  let studentsQuery = supabase.from('students').select('id, class_name, section')
+    .eq('school_id', profile.school_id).eq('is_active', true)
+  
+  if (classNames.length > 0) {
+    studentsQuery = studentsQuery.in('class_name', classNames)
+  } else {
+    studentsQuery = studentsQuery.eq('id', '00000000-0000-0000-0000-000000000000') // matches nothing
+  }
+
+  const [{ data: studentsData }, { data: todayAtt }, { data: examsData }] = await Promise.all([
+    studentsQuery,
+    supabase.from('attendance').select('status, student_id')
       .eq('school_id', profile.school_id).eq('date', today),
-    supabase.from('exams').select('id, title, status', { count: 'exact', head: false })
-      .eq('school_id', profile.school_id).eq('class_name', class_name),
+    classNames.length > 0 
+      ? supabase.from('exams').select('id, class_name, section').eq('school_id', profile.school_id).in('class_name', classNames)
+      : Promise.resolve({ data: [] }),
   ])
 
-  const studentCount = students?.length ?? 0
-  const present = todayAtt?.filter(r => r.status === 'present').length ?? 0
-  const examCount = exams?.length ?? 0
+  const students = (studentsData ?? []).filter(student => 
+    assignedClasses.some(c => 
+      c.class_name === student.class_name && 
+      (!c.section || c.section === student.section)
+    )
+  )
+
+  const exams = (examsData ?? []).filter(exam => 
+    assignedClasses.some(c => 
+      c.class_name === exam.class_name && 
+      (!c.section || c.section === exam.section)
+    )
+  )
+
+
+  const studentCount = students.length
+  const studentIds = new Set(students.map(s => s.id))
+  const present = todayAtt?.filter(r => r.status === 'present' && studentIds.has(r.student_id)).length ?? 0
+  const examCount = exams.length
   const dateStr = new Date().toLocaleDateString('en-PK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
   const firstName = profile.full_name.split(' ')[0]
 
@@ -76,7 +102,6 @@ export default async function TeacherDashboard() {
             { href: '/teacher/attendance',   label: '✅ Mark Attendance',   bg: '#4f46e5' },
             { href: '/teacher/exams',        label: '📝 Enter Marks',       bg: '#0284c7' },
             { href: '/teacher/report-cards', label: '📄 Report Cards',      bg: '#7c3aed' },
-            { href: '/teacher/fees',         label: '💰 View Fees',         bg: '#16a34a' },
             { href: '/teacher/account',      label: '🔑 Change Password',   bg: '#64748b' },
           ].map(a => (
             <a key={a.href} href={a.href} style={{

@@ -36,7 +36,6 @@ const TEACHER_NAV: NavItem[] = [
   { href: '/teacher/attendance',   label: 'Attendance',    icon: '✅' },
   { href: '/teacher/exams',        label: 'Exams & Marks', icon: '📝' },
   { href: '/teacher/report-cards', label: 'Report Cards',  icon: '📄' },
-  { href: '/teacher/fees',         label: 'Fees',          icon: '💰' },
   { href: '/teacher/account',      label: 'My Account',    icon: '🔑' },
 ]
 

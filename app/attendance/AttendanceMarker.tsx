@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 type Status = 'present' | 'absent' | 'late' | 'leave'
@@ -17,6 +18,8 @@ interface Props {
   teacherId: string; schoolId: string; date: string
 }
 
+import { revalidateDashboard } from './actions'
+
 export default function AttendanceMarker({ students, classes, initialAttendance, teacherId, schoolId, date }: Props) {
   const [att, setAtt]         = useState<Record<string, Status>>(initialAttendance as any)
   const [selClass, setClass]  = useState(classes[0] ?? '')
@@ -27,6 +30,8 @@ export default function AttendanceMarker({ students, classes, initialAttendance,
   const classStudents = students.filter(s => s.class_name === selClass)
   const marked  = classStudents.filter(s => att[s.id]).length
   const present = classStudents.filter(s => att[s.id] === 'present').length
+
+  const router = useRouter()
 
   function markAll(status: Status) {
     const next = { ...att }
@@ -41,6 +46,8 @@ export default function AttendanceMarker({ students, classes, initialAttendance,
       date, status: att[s.id],
     }))
     await supabase.from('attendance').upsert(records, { onConflict: 'school_id,student_id,date' })
+    await revalidateDashboard()
+    router.refresh()
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 3000)
   }

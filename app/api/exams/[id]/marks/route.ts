@@ -47,11 +47,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const { data: teacherRow } = await supabase.from('teachers')
       .select('class_assigned').eq('email', user.email!).eq('school_id', profile.school_id).single()
     if (teacherRow?.class_assigned) {
-      const { parseClassAssigned } = await import('@/lib/teacherAccess')
-      const { class_name, section } = parseClassAssigned(teacherRow.class_assigned)
+      const { parseAllClassesAssigned } = await import('@/lib/teacherAccess')
+      const classes = parseAllClassesAssigned(teacherRow.class_assigned)
       const { data: exam } = await supabase.from('exams').select('class_name, section').eq('id', params.id).single()
-      if (exam && (exam.class_name !== class_name || exam.section !== section)) {
-        return NextResponse.json({ error: 'Forbidden: not your class' }, { status: 403 })
+      if (exam) {
+        const isAllowed = classes.some(c => 
+          c.class_name === exam.class_name && 
+          (!c.section || c.section === exam.section)
+        )
+        if (!isAllowed) {
+          return NextResponse.json({ error: 'Forbidden: not your class' }, { status: 403 })
+        }
       }
     }
   }
