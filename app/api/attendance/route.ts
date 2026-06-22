@@ -50,8 +50,23 @@ export async function POST(req: NextRequest) {
   if (!profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { records } = await req.json()
   const rows = records.map((r: any) => ({ school_id: profile.school_id, teacher_id: profile.id, ...r }))
+
+  if (rows.length > 0) {
+    const studentIds = rows.map((r: any) => r.student_id)
+    const date = rows[0].date
+    const { data: existing } = await supabase.from('attendance')
+      .select('id, student_id')
+      .eq('school_id', profile.school_id)
+      .eq('date', date)
+      .in('student_id', studentIds)
+    const existingMap = new Map(existing?.map((e: any) => [e.student_id, e.id]))
+    rows.forEach((r: any) => {
+      if (existingMap.has(r.student_id)) r.id = existingMap.get(r.student_id)
+    })
+  }
+
   const { data, error } = await supabase.from('attendance')
-    .upsert(rows, { onConflict: 'school_id,student_id,date' }).select()
+    .upsert(rows).select()
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   return NextResponse.json(data, { status: 201 })
 }

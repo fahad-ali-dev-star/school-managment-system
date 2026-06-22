@@ -41,11 +41,32 @@ export default function AttendanceMarker({ students, classes, initialAttendance,
 
   async function save() {
     setSaving(true)
-    const records = classStudents.filter(s => att[s.id]).map(s => ({
-      school_id: schoolId, student_id: s.id, teacher_id: teacherId,
-      date, status: att[s.id],
-    }))
-    await supabase.from('attendance').upsert(records, { onConflict: 'school_id,student_id,date' })
+
+    const studentIds = classStudents.map(s => s.id)
+    const { data: existing } = await supabase.from('attendance')
+      .select('id, student_id')
+      .eq('school_id', schoolId)
+      .eq('date', date)
+      .in('student_id', studentIds)
+
+    const existingMap = new Map(existing?.map(e => [e.student_id, e.id]))
+
+    const records = classStudents.filter(s => att[s.id]).map(s => {
+      const row: any = {
+        school_id: schoolId, student_id: s.id, teacher_id: teacherId,
+        date, status: att[s.id],
+      }
+      if (existingMap.has(s.id)) row.id = existingMap.get(s.id)
+      return row
+    })
+
+    const { error } = await supabase.from('attendance').upsert(records)
+    if (error) {
+      alert('Error saving: ' + error.message)
+      console.error('Save error:', error)
+      setSaving(false)
+      return
+    }
     await revalidateDashboard()
     router.refresh()
     setSaving(false); setSaved(true)
