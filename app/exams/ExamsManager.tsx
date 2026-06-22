@@ -138,8 +138,13 @@ export default function ExamsManager({
 
   async function handleDeleteExam(id: string) {
     if (!confirm('Delete this exam? All marks will be lost.')) return
-    await fetch(`/api/exams/${id}`, { method: 'DELETE' })
-    setExams(p => p.filter(e => e.id !== id))
+    const res = await fetch(`/api/exams/${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setExams(p => p.filter(e => e.id !== id))
+    } else {
+      const data = await res.json()
+      alert(`Failed to delete exam: ${data.error || 'Unknown error'}`)
+    }
   }
 
   async function handleStatusChange(exam: any, status: string) {

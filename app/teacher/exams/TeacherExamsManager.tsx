@@ -71,6 +71,16 @@ export default function TeacherExamsManager({
     setTimeout(() => setSavedMarks(false), 3000)
   }
 
+  async function handleStatusChange(exam: any, status: string) {
+    if (!confirm('Are you sure you want to submit marks to Admin? You might not be able to edit them after publishing.')) return
+    await fetch(`/api/exams/${exam.id}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })
+    // For simple UI update, we could reload or just hide the button
+    window.location.reload()
+  }
+
   if (view === 'marks' && activeExam) {
     const subjects: Subject[] = activeExam.subjects ?? []
     return (
@@ -169,9 +179,21 @@ export default function TeacherExamsManager({
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap' }}>
-                    <button onClick={() => openMarksEntry(exam)} style={{ padding: '6px 14px', border: '1px solid #bbf7d0', borderRadius: 6, background: '#f0fdf4', cursor: 'pointer', fontSize: 12, color: '#16a34a', fontFamily: 'inherit', fontWeight: 500 }}>
-                      ✏ Enter / Edit Marks
-                    </button>
+                    {exam.status !== 'published' && (
+                      <button onClick={() => openMarksEntry(exam)} style={{ padding: '6px 14px', border: '1px solid #bbf7d0', borderRadius: 6, background: '#f0fdf4', cursor: 'pointer', fontSize: 12, color: '#16a34a', fontFamily: 'inherit', fontWeight: 500 }}>
+                        ✏ Enter / Edit Marks
+                      </button>
+                    )}
+                    {(exam.status === 'ongoing' || exam.status === 'upcoming') && (
+                      <button onClick={() => handleStatusChange(exam, 'completed')} style={{ padding: '6px 14px', border: '1px solid #ddd6fe', borderRadius: 6, background: '#f5f3ff', cursor: 'pointer', fontSize: 12, color: '#6d28d9', fontFamily: 'inherit', fontWeight: 500 }}>
+                        ✓ Submit to Admin
+                      </button>
+                    )}
+                    {exam.status === 'published' && (
+                      <button onClick={() => openMarksEntry(exam)} style={{ padding: '6px 14px', border: '1px solid #e0e7ff', borderRadius: 6, background: '#eef2ff', cursor: 'pointer', fontSize: 12, color: '#4f46e5', fontFamily: 'inherit', fontWeight: 500 }}>
+                        👁 View Marks
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

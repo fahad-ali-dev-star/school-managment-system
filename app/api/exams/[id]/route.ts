@@ -51,6 +51,11 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     .from('users').select('school_id').eq('id', user.id).single()
   if (!profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // Explicitly delete marks and subjects first to avoid foreign key constraint errors
+  // since ON DELETE CASCADE might not be configured in the database
+  await supabase.from('marks').delete().eq('exam_id', params.id).eq('school_id', profile.school_id)
+  await supabase.from('subjects').delete().eq('exam_id', params.id).eq('school_id', profile.school_id)
+
   const { error } = await supabase
     .from('exams').delete()
     .eq('id', params.id).eq('school_id', profile.school_id)

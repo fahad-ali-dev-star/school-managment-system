@@ -72,21 +72,41 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const subjectMap: Record<string, number> = {}
   subjectsData?.forEach(s => { subjectMap[s.id] = s.total_marks })
 
-  const rows = marks.map((m: any) => ({
-    exam_id: params.id,
-    school_id: profile.school_id,
-    student_id: m.student_id,
-    subject_id: m.subject_id,
-    marks_obtained: Number(m.marks_obtained),
-    grade: calcGrade(Number(m.marks_obtained), subjectMap[m.subject_id] ?? 100),
-    remarks: m.remarks ?? null,
-  }))
+  // Fetch existing marks to get their IDs
+  const { data: existingMarks } = await supabase
+    .from('marks')
+    .select('id, subject_id, student_id')
+    .eq('exam_id', params.id)
+
+  const existingMap = new Map(
+    existingMarks?.map(m => [`${m.subject_id}-${m.student_id}`, m.id]) || []
+  )
+
+  const rows = marks.map((m: any) => {
+    const row: any = {
+      exam_id: params.id,
+      school_id: profile.school_id,
+      student_id: m.student_id,
+      subject_id: m.subject_id,
+      marks_obtained: Number(m.marks_obtained),
+      grade: calcGrade(Number(m.marks_obtained), subjectMap[m.subject_id] ?? 100),
+      remarks: m.remarks ?? null,
+    }
+    const existingId = existingMap.get(`${m.subject_id}-${m.student_id}`)
+    if (existingId) {
+      row.id = existingId
+    }
+    return row
+  })
 
   const { data, error } = await supabase
     .from('marks')
-    .upsert(rows, { onConflict: 'exam_id,subject_id,student_id' })
+    .upsert(rows)
     .select()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  if (error) {
+    console.error('Marks Save Error:', error)
+    return NextResponse.json({ error: error.message }, { status: 400 })
+  }
   return NextResponse.json(data, { status: 201 })
 }
