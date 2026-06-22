@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Student } from '@/types'
 import { PLAN_LIMITS, PlanType } from '@/lib/plans'
 import { Lock } from 'lucide-react'
+import PromoteStudentsModal from '@/components/PromoteStudentsModal'
 
 interface ClassOption { id: string; name: string; section: string }
 
@@ -31,6 +32,7 @@ export default function StudentsList({
   const [search, setSearch]     = useState('')
   const [cls, setCls]           = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [showPromote, setShowPromote] = useState(false)
   const [editing, setEditing]   = useState<Student | null>(null)
   const [saving, setSaving]     = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -127,6 +129,25 @@ export default function StudentsList({
               <Lock size={14} /> Student limit reached ({limit})
             </div>
           )}
+          <button 
+            onClick={() => setShowPromote(true)}
+            style={{ 
+              padding: '9px 18px', 
+              background: 'white', 
+              color: '#4f46e5', 
+              border: '1px solid #c7d2fe', 
+              borderRadius: 8, 
+              fontSize: 13, 
+              fontWeight: 600, 
+              cursor: 'pointer', 
+              fontFamily: 'inherit',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8
+            }}
+          >
+            ↗ Promote Students
+          </button>
           <button 
             onClick={openAdd} 
             disabled={isAtLimit}
@@ -279,6 +300,15 @@ export default function StudentsList({
             </form>
           </div>
         </div>
+      )}
+
+      {showPromote && (
+        <PromoteStudentsModal
+          students={students}
+          classes={classes}
+          onClose={() => setShowPromote(false)}
+          onSuccess={() => window.location.reload()}
+        />
       )}
     </div>
   )
