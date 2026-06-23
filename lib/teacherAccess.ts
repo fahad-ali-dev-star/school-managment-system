@@ -6,34 +6,35 @@
 export function parseClassAssigned(classAssigned: string): { class_name: string; section: string } {
   if (!classAssigned) return { class_name: '', section: '' }
   
-  // Try dash first (e.g. "Grade 5 - A" or "Grade 5-A")
-  const lastDash = classAssigned.lastIndexOf('-')
-  if (lastDash > 0) {
-    return {
-      class_name: classAssigned.slice(0, lastDash).trim(),
-      section:    classAssigned.slice(lastDash + 1).trim(),
-    }
-  }
+  const trimmed = classAssigned.trim()
 
-  // Try to parse "Grade 5 A" or "Grade 5 B" (ends with a single letter)
-  const match = classAssigned.trim().match(/^(.*?)\s+([a-zA-Z])$/);
-  if (match) {
-    return {
-      class_name: match[1].trim(),
-      section: match[2].trim().toUpperCase()
-    }
-  }
+  let className = trimmed
+  let section = ''
 
-  // Try to parse "Grade 5 Section A"
-  const secMatch = classAssigned.trim().match(/^(.*?)\s+section\s+([a-zA-Z])$/i);
+  // 1. Try to parse "Grade 5 Section A"
+  const secMatch = trimmed.match(/^(.*?)\s+section\s+([a-zA-Z])$/i)
   if (secMatch) {
-    return {
-      class_name: secMatch[1].trim(),
-      section: secMatch[2].trim().toUpperCase()
+    className = secMatch[1].trim()
+    section = secMatch[2].trim().toUpperCase()
+  } else {
+    // 2. Try to parse ending with a single letter preceded by space or dash.
+    // This handles "Grade 5 A", "Grade 5 - A", "Grade 5-A", "Play-Group A", "Play-Group-A"
+    const match = trimmed.match(/^(.*?)(?:\s+|-)\s*([a-zA-Z])$/)
+    if (match) {
+      className = match[1].trim()
+      section = match[2].trim().toUpperCase()
     }
   }
 
-  return { class_name: classAssigned.trim(), section: '' }
+  // Normalize className case (e.g. "nursery" -> "Nursery", "grade 5" -> "Grade 5")
+  className = className.replace(/\b\w/g, c => c.toUpperCase())
+  
+  // Fix common typo for Play-Group
+  if (className === 'Play Group') {
+    className = 'Play-Group'
+  }
+
+  return { class_name: className, section }
 }
 
 /**
