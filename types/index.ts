@@ -20,6 +20,7 @@ export interface Student {
   gender: 'male' | 'female' | 'other'; parent_name: string; parent_phone: string
   parent_email?: string; address?: string; photo_url?: string
   fee_status: 'paid' | 'pending' | 'overdue'; is_active: boolean
+  monthly_fee?: number
   admission_date: string; created_at: string
 }
 export interface AttendanceRecord {

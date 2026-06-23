@@ -18,6 +18,7 @@ const EMPTY = {
   full_name: '', roll_number: '', class_name: '', section: '',
   gender: 'male', date_of_birth: '', parent_name: '', parent_phone: '', parent_email: '', class_id: '',
   fee_status: 'pending',
+  monthly_fee: '',
 }
 
 export default function StudentsList({
@@ -69,6 +70,7 @@ export default function StudentsList({
       parent_name: s.parent_name, parent_phone: s.parent_phone,
       parent_email: s.parent_email ?? '', class_id: (s as any).class_id ?? '',
       fee_status: s.fee_status,
+      monthly_fee: s.monthly_fee != null ? String(s.monthly_fee) : '',
     })
     setError(''); setShowForm(true)
   }
@@ -89,6 +91,7 @@ export default function StudentsList({
         parent_name: form.parent_name, parent_phone: form.parent_phone,
         parent_email: form.parent_email || null, class_id: form.class_id || null,
         fee_status: form.fee_status,
+        monthly_fee: form.monthly_fee ? parseFloat(form.monthly_fee) : null,
       }
       if (editing) {
         const { data, error: err } = await supabase.from('students').update(payload).eq('id', editing.id).select().single()
@@ -98,7 +101,29 @@ export default function StudentsList({
         const { data, error: err } = await supabase.from('students')
           .insert({ ...payload, school_id: schoolId }).select().single()
         if (err) { setError(err.message); setSaving(false); return }
-        setStudents(p => [...p, data as Student])
+        const newStudent = data as Student
+        setStudents(p => [...p, newStudent])
+
+        // Auto-create a fee record for the current month
+        if (payload.monthly_fee && payload.monthly_fee > 0) {
+          const now = new Date()
+          const monthLabel = now.toLocaleString('default', { month: 'long' }) + ' ' + now.getFullYear()
+          const dueDate = new Date(now.getFullYear(), now.getMonth(), 15).toISOString().split('T')[0]
+          const receipt = 'RCP-' + Date.now().toString(36).toUpperCase()
+          await supabase.from('fees').insert({
+            student_id: newStudent.id,
+            school_id: schoolId,
+            fee_type: 'monthly',
+            month: monthLabel,
+            amount: payload.monthly_fee,
+            status: form.fee_status,
+            due_date: dueDate,
+            paid_date: form.fee_status === 'paid' ? now.toISOString().split('T')[0] : null,
+            payment_method: 'cash',
+            receipt_number: receipt,
+            notes: `Initial fee — added with student registration`,
+          })
+        }
       }
       setShowForm(false)
     } catch { setError('Network error. Try again.') }
@@ -184,14 +209,14 @@ export default function StudentsList({
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                {['Roll No','Student','Class','Parent','Phone','Fee','Actions'].map(h => (
+                {['Roll No','Student','Class','Parent','Phone','Monthly Fee','Fee Status','Actions'].map(h => (
                   <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: 12, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0
-                ? <tr><td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No students found.</td></tr>
+                ? <tr><td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No students found.</td></tr>
                 : filtered.map((s, i) => (
                   <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 ? '#fafafa' : 'white' }}>
                     <td style={{ padding: '11px 14px', fontFamily: 'monospace', color: '#6366f1', fontWeight: 500 }}>{s.roll_number}</td>
@@ -202,6 +227,11 @@ export default function StudentsList({
                     <td style={{ padding: '11px 14px', color: '#475569' }}>{s.class_name} – {s.section}</td>
                     <td style={{ padding: '11px 14px', color: '#475569' }}>{s.parent_name}</td>
                     <td style={{ padding: '11px 14px', color: '#475569' }}>{s.parent_phone}</td>
+                    <td style={{ padding: '11px 14px', fontWeight: 600, color: '#0f172a' }}>
+                      {s.monthly_fee != null && s.monthly_fee > 0
+                        ? <span>Rs {Number(s.monthly_fee).toLocaleString()}</span>
+                        : <span style={{ color: '#cbd5e1', fontSize: 11 }}>Not set</span>}
+                    </td>
                     <td style={{ padding: '11px 14px' }}>
                       <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6, textTransform: 'capitalize', background: feeBg(s.fee_status), color: feeColor(s.fee_status) }}>
                         {s.fee_status}
@@ -284,6 +314,22 @@ export default function StudentsList({
                     <option value="pending">Pending</option>
                     <option value="overdue">Overdue</option>
                   </select>
+                </div>
+                <div>
+                  <label style={lbl}>Monthly Fee Amount (Rs)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    style={inp}
+                    value={form.monthly_fee}
+                    placeholder="e.g. 3500"
+                    onChange={e => setForm(f => ({ ...f, monthly_fee: e.target.value }))}
+                  />
+                  {!editing && form.monthly_fee && (
+                    <p style={{ fontSize: 11, color: '#4f46e5', margin: '4px 0 0' }}>
+                      ✓ A {form.fee_status} fee record will be created automatically
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label style={lbl}>Date of Birth (Optional)</label>
