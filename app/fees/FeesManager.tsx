@@ -24,8 +24,9 @@ function badge(status: string) {
   )
 }
 
-export default function FeesManager({ fees: init, students, schoolId }: { fees: any[]; students: Student[]; schoolId: string }) {
+export default function FeesManager({ fees: init, students: initStudents, schoolId }: { fees: any[]; students: Student[]; schoolId: string }) {
   const [fees, setFees]         = useState(init)
+  const [students, setStudents] = useState(initStudents)
   const [showForm, setShowForm] = useState(false)
   const [editingFee, setEditingFee] = useState<any>(null)
   const [saving, setSaving]     = useState(false)
@@ -50,7 +51,7 @@ export default function FeesManager({ fees: init, students, schoolId }: { fees: 
 
   const filteredStudents = students.filter(s => {
     const q = search.toLowerCase()
-    return (!q || s.full_name?.toLowerCase().includes(s.full_name?.toLowerCase().includes(q) ? q : '') || s.roll_number?.includes(q))
+    return (!q || s.full_name?.toLowerCase().includes(q) || s.roll_number?.includes(q))
       && (!filterStatus || s.fee_status === filterStatus)
   })
 
@@ -68,9 +69,9 @@ export default function FeesManager({ fees: init, students, schoolId }: { fees: 
       
       if (!error && data) {
         setFees(p => p.map(f => f.id === data.id ? data : f))
-        if (form.status === 'paid') {
-          await supabase.from('students').update({ fee_status: 'paid' }).eq('id', form.student_id)
-        }
+        // Always sync student fee_status with the fee status
+        await supabase.from('students').update({ fee_status: form.status }).eq('id', form.student_id)
+        setStudents(p => p.map(s => s.id === form.student_id ? { ...s, fee_status: form.status } : s))
       }
     } else {
       const receipt = 'RCP-' + Date.now().toString(36).toUpperCase()
@@ -82,9 +83,9 @@ export default function FeesManager({ fees: init, students, schoolId }: { fees: 
       
       if (!error && data) {
         setFees(p => [data, ...p])
-        if (form.status === 'paid') {
-          await supabase.from('students').update({ fee_status: 'paid' }).eq('id', form.student_id)
-        }
+        // Always sync student fee_status with the fee status
+        await supabase.from('students').update({ fee_status: form.status }).eq('id', form.student_id)
+        setStudents(p => p.map(s => s.id === form.student_id ? { ...s, fee_status: form.status } : s))
       }
     }
     setSaving(false); setShowForm(false); setEditingFee(null)
@@ -93,12 +94,8 @@ export default function FeesManager({ fees: init, students, schoolId }: { fees: 
   async function updateStudentStatus(studentId: string, newStatus: string) {
     const { error } = await supabase.from('students').update({ fee_status: newStatus }).eq('id', studentId)
     if (!error) {
-      // We need to refresh the students list or update local state if it was passed as a prop that we can mutate.
-      // Since 'students' is a prop, we'd ideally want to update it in the parent or use a local state.
-      // For now, let's just alert success or rely on the user refreshing if we can't mutate props.
-      // Actually, it's better to have students as state if we want to update it.
-      alert('Status updated successfully')
-      window.location.reload() // Simple way to refresh for now
+      // Update local students state immediately — no page reload needed
+      setStudents(p => p.map(s => s.id === studentId ? { ...s, fee_status: newStatus } : s))
     }
   }
 

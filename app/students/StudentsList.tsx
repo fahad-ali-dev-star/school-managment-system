@@ -97,6 +97,45 @@ export default function StudentsList({
         const { data, error: err } = await supabase.from('students').update(payload).eq('id', editing.id).select().single()
         if (err) { setError(err.message); setSaving(false); return }
         setStudents(p => p.map(s => s.id === editing.id ? data as Student : s))
+
+        // If fee_status changed, sync ALL fee records in the fees table
+        if (editing.fee_status !== payload.fee_status) {
+          const now = new Date()
+          const todayStr = now.toISOString().split('T')[0]
+          const paidDate = payload.fee_status === 'paid' ? todayStr : null
+
+          // Check if this student has any fee records
+          const { data: existingFees } = await supabase
+            .from('fees')
+            .select('id')
+            .eq('student_id', editing.id)
+
+          if (existingFees && existingFees.length > 0) {
+            // Update ALL existing fee records to the new status
+            await supabase.from('fees')
+              .update({ status: payload.fee_status, paid_date: paidDate })
+              .eq('student_id', editing.id)
+          } else {
+            // No fee records exist — create one so it appears on the Fees page & Dashboard
+            const monthLabel = now.toLocaleString('default', { month: 'long' }) + ' ' + now.getFullYear()
+            const dueDate = new Date(now.getFullYear(), now.getMonth(), 15).toISOString().split('T')[0]
+            const receipt = 'RCP-' + Date.now().toString(36).toUpperCase()
+            const feeAmount = payload.monthly_fee ?? 0
+            await supabase.from('fees').insert({
+              student_id: editing.id,
+              school_id: schoolId,
+              fee_type: 'monthly',
+              month: monthLabel,
+              amount: feeAmount,
+              status: payload.fee_status,
+              due_date: dueDate,
+              paid_date: paidDate,
+              payment_method: 'cash',
+              receipt_number: receipt,
+              notes: 'Fee record created from student status update',
+            })
+          }
+        }
       } else {
         const { data, error: err } = await supabase.from('students')
           .insert({ ...payload, school_id: schoolId }).select().single()
