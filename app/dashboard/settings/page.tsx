@@ -26,7 +26,7 @@ export default async function SettingsPage() {
   // Fetch school details
   const { data: school } = await supabase
     .from('schools')
-    .select('name, plan')
+    .select('name, plan, phone')
     .eq('id', profile.school_id)
     .single()
 
@@ -44,6 +44,7 @@ export default async function SettingsPage() {
       <SettingsForm 
         initialEmail={user.email ?? ''} 
         initialSchoolName={school?.name ?? ''}
+        initialSchoolPhone={school?.phone ?? ''}
         schoolId={profile.school_id}
       />
 

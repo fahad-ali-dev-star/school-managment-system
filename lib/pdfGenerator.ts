@@ -89,7 +89,8 @@ export function generateReportCardPDF(data: ReportData, singleStudent?: string):
     // School address + phone
     doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
-    doc.text(`${data.school.address}  |  ${data.school.phone}`, W / 2, 21, { align: 'center' })
+    const contactInfo = data.school.phone ? `${data.school.address}  |  ${data.school.phone}` : data.school.address
+    doc.text(contactInfo, W / 2, 21, { align: 'center' })
 
     // Report card label
     doc.setFillColor(255, 255, 255)
@@ -135,7 +136,7 @@ export function generateReportCardPDF(data: ReportData, singleStudent?: string):
       ['Father Name',  report.student.parent_name],
       ['Class',        `${report.student.class_name} — Section ${report.student.section}`],
       ['Gender',       report.student.gender.charAt(0).toUpperCase() + report.student.gender.slice(1)],
-      ['Contact',      report.student.parent_phone],
+      ['Contact No',   data.school.phone || 'N/A'],
     ]
 
     infoRows.forEach((row, i) => {

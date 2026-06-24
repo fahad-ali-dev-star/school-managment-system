@@ -7,14 +7,17 @@ import { useRouter } from 'next/navigation'
 export default function SettingsForm({ 
   initialEmail, 
   initialSchoolName, 
+  initialSchoolPhone,
   schoolId 
 }: { 
   initialEmail: string, 
   initialSchoolName: string,
+  initialSchoolPhone: string,
   schoolId: string 
 }) {
   const [email, setEmail] = useState(initialEmail)
   const [schoolName, setSchoolName] = useState(initialSchoolName)
+  const [schoolPhone, setSchoolPhone] = useState(initialSchoolPhone)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -28,11 +31,11 @@ export default function SettingsForm({
     setMessage({ type: '', text: '' })
 
     try {
-      // 1. Update School Name if changed
-      if (schoolName !== initialSchoolName) {
+      // 1. Update School Details if changed
+      if (schoolName !== initialSchoolName || schoolPhone !== initialSchoolPhone) {
         const { error: schoolError } = await supabase
           .from('schools')
-          .update({ name: schoolName })
+          .update({ name: schoolName, phone: schoolPhone })
           .eq('id', schoolId)
 
         if (schoolError) throw schoolError
@@ -94,6 +97,22 @@ export default function SettingsForm({
               fontSize: 14, fontFamily: 'inherit'
             }}
             required
+          />
+        </div>
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
+            School Phone Number
+          </label>
+          <input
+            type="text"
+            value={schoolPhone}
+            onChange={(e) => setSchoolPhone(e.target.value)}
+            placeholder="e.g. +92-300-0000000"
+            style={{
+              width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0',
+              fontSize: 14, fontFamily: 'inherit'
+            }}
           />
         </div>
 

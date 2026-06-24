@@ -223,7 +223,9 @@ export default function ReportCardsUI({ exams }: { exams: ExamOption[] }) {
                   {/* Header */}
                   <div style={{ background: '#4f46e5', padding: '1.25rem', textAlign: 'center' }}>
                     <p style={{ fontSize: 18, fontWeight: 700, color: 'white', margin: '0 0 2px' }}>{reportData.school.name.toUpperCase()}</p>
-                    <p style={{ fontSize: 11, color: '#c7d2fe', margin: 0 }}>{reportData.school.address}</p>
+                    <p style={{ fontSize: 11, color: '#c7d2fe', margin: 0 }}>
+                      {reportData.school.address} {reportData.school.phone ? `  |  ${reportData.school.phone}` : ''}
+                    </p>
                     <div style={{ display: 'inline-block', background: 'white', color: '#4f46e5', fontSize: 11, fontWeight: 700, padding: '3px 14px', borderRadius: 20, marginTop: 8 }}>
                       STUDENT RESULT CARD
                     </div>
@@ -245,7 +247,7 @@ export default function ReportCardsUI({ exams }: { exams: ExamOption[] }) {
                           ['Father', activeReport.student.parent_name],
                           ['Class', `${activeReport.student.class_name} — Sec ${activeReport.student.section}`],
                           ['Rank', `${activeReport.rank} of ${activeReport.totalStudents}`],
-                          ['Contact', activeReport.student.parent_phone],
+                          ['Contact No', reportData.school.phone || 'N/A'],
                         ].map(([k, v]) => (
                           <div key={k}>
                             <span style={{ color: '#94a3b8', fontSize: 11 }}>{k}: </span>
