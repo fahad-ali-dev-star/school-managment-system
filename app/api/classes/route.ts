@@ -16,6 +16,7 @@ export async function GET() {
     .select('*, students(count)')
     .eq('school_id', profile.school_id)
     .eq('is_active', true)
+    .eq('students.is_active', true)
     .order('name').order('section')
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

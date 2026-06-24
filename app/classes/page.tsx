@@ -17,6 +17,7 @@ export default async function ClassesPage() {
     .select('*, students(count)')
     .eq('school_id', profile.school_id)
     .eq('is_active', true)
+    .eq('students.is_active', true)
     .order('name').order('section')
 
   const formatted = (classes ?? []).map(c => ({

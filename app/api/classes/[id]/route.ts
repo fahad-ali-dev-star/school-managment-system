@@ -18,6 +18,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     .select('*, students(id, full_name, roll_number, gender, fee_status)')
     .eq('id', params.id)
     .eq('school_id', ctx.school_id)
+    .eq('students.is_active', true)
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 404 })
