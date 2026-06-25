@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { isOffline, queueOfflineMutation, getMergedOfflineState, generateUUID } from '@/lib/offlineSync'
 
 interface Student { id: string; full_name: string; roll_number: string; class_name: string; fee_status?: string }
 
@@ -25,8 +26,8 @@ function badge(status: string) {
 }
 
 export default function FeesManager({ fees: init, students: initStudents, schoolId }: { fees: any[]; students: Student[]; schoolId: string }) {
-  const [fees, setFees]         = useState(init)
-  const [students, setStudents] = useState(initStudents)
+  const [fees, setFees]         = useState(() => getMergedOfflineState('fees', init))
+  const [students, setStudents] = useState(() => getMergedOfflineState('students', initStudents))
   const [showForm, setShowForm] = useState(false)
   const [editingFee, setEditingFee] = useState<any>(null)
   const [saving, setSaving]     = useState(false)
@@ -61,6 +62,85 @@ export default function FeesManager({ fees: init, students: initStudents, school
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setSaving(true)
     
+    if (isOffline()) {
+      const feeId = editingFee ? editingFee.id : generateUUID()
+      const receipt = editingFee ? editingFee.receipt_number : 'RCP-' + Date.now().toString(36).toUpperCase()
+      const now = new Date()
+      const feeRecord = {
+        id: feeId,
+        school_id: schoolId,
+        student_id: form.student_id,
+        amount: parseFloat(form.amount),
+        fee_type: form.fee_type,
+        month: form.month,
+        due_date: form.due_date,
+        paid_date: form.status === 'paid' ? form.paid_date : null,
+        status: form.status,
+        payment_method: form.payment_method,
+        receipt_number: receipt,
+        notes: form.notes || null,
+        created_at: editingFee ? editingFee.created_at : now.toISOString(),
+        students: students.find(s => s.id === form.student_id) || null
+      }
+
+      if (editingFee) {
+        queueOfflineMutation({
+          type: 'supabase',
+          target: 'fees',
+          operation: 'update',
+          payload: {
+            student_id: form.student_id,
+            amount: parseFloat(form.amount),
+            fee_type: form.fee_type,
+            month: form.month,
+            due_date: form.due_date,
+            paid_date: form.status === 'paid' ? form.paid_date : null,
+            status: form.status,
+            payment_method: form.payment_method,
+            notes: form.notes || null,
+          },
+          matchKey: 'id',
+          matchValue: feeId
+        })
+        setFees(p => p.map(f => f.id === feeId ? feeRecord : f))
+      } else {
+        queueOfflineMutation({
+          type: 'supabase',
+          target: 'fees',
+          operation: 'insert',
+          payload: {
+            id: feeId,
+            school_id: schoolId,
+            student_id: form.student_id,
+            amount: parseFloat(form.amount),
+            fee_type: form.fee_type,
+            month: form.month,
+            due_date: form.due_date,
+            paid_date: form.status === 'paid' ? form.paid_date : null,
+            status: form.status,
+            payment_method: form.payment_method,
+            receipt_number: receipt,
+            notes: form.notes || null,
+          }
+        })
+        setFees(p => [feeRecord, ...p])
+      }
+
+      queueOfflineMutation({
+        type: 'supabase',
+        target: 'students',
+        operation: 'update',
+        payload: { fee_status: form.status },
+        matchKey: 'id',
+        matchValue: form.student_id
+      })
+      setStudents(p => p.map(s => s.id === form.student_id ? { ...s, fee_status: form.status } : s))
+
+      alert('Fee details saved locally. Changes will sync automatically when you are back online.')
+      setSaving(false); setShowForm(false); setEditingFee(null)
+      return
+    }
+
     if (editingFee) {
       const { data, error } = await supabase.from('fees').update({
         ...form, amount: parseFloat(form.amount),
@@ -92,6 +172,19 @@ export default function FeesManager({ fees: init, students: initStudents, school
   }
 
   async function updateStudentStatus(studentId: string, newStatus: string) {
+    if (isOffline()) {
+      queueOfflineMutation({
+        type: 'supabase',
+        target: 'students',
+        operation: 'update',
+        payload: { fee_status: newStatus },
+        matchKey: 'id',
+        matchValue: studentId
+      })
+      setStudents(p => p.map(s => s.id === studentId ? { ...s, fee_status: newStatus } : s))
+      alert('Student status updated locally. Changes will sync automatically when you are back online.')
+      return
+    }
     const { error } = await supabase.from('students').update({ fee_status: newStatus }).eq('id', studentId)
     if (!error) {
       // Update local students state immediately — no page reload needed
@@ -101,6 +194,18 @@ export default function FeesManager({ fees: init, students: initStudents, school
 
   async function handleDelete(id: string) {
     if (!confirm('Are you sure you want to delete this record?')) return
+    if (isOffline()) {
+      queueOfflineMutation({
+        type: 'supabase',
+        target: 'fees',
+        operation: 'delete',
+        matchKey: 'id',
+        matchValue: id
+      })
+      setFees(p => p.filter(f => f.id !== id))
+      alert('Delete saved locally. Will sync automatically when online.')
+      return
+    }
     const { error } = await supabase.from('fees').delete().eq('id', id)
     if (!error) setFees(p => p.filter(f => f.id !== id))
   }

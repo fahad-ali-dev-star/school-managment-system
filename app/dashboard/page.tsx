@@ -12,35 +12,50 @@ export default async function DashboardPage() {
 
   const today = new Date().toISOString().split('T')[0]
 
-  const [
-    { count: totalStudents },
-    { count: totalTeachers },
-    { count: totalClasses },
-    { data: todayAtt },
-    { data: fees },
-  ] = await Promise.all([
-    supabase.from('students')
-      .select('*', { count: 'exact', head: true })
-      .eq('school_id', profile.school_id).eq('is_active', true),
-    supabase.from('teachers')
-      .select('*', { count: 'exact', head: true })
-      .eq('school_id', profile.school_id).eq('is_active', true),
-    supabase.from('classes')
-      .select('*', { count: 'exact', head: true })
-      .eq('school_id', profile.school_id).eq('is_active', true),
-    supabase.from('attendance')
-      .select('status')
-      .eq('school_id', profile.school_id).eq('date', today),
-    supabase.from('fees')
-      .select('amount, status')
-      .eq('school_id', profile.school_id),
-  ])
+  let totalStudents = 0
+  let totalTeachers = 0
+  let totalClasses  = 0
+  let todayAtt: any[] = []
+  let fees: any[]     = []
 
-  const present   = todayAtt?.filter(r => r.status === 'present').length ?? 0
-  const absent    = todayAtt?.filter(r => r.status === 'absent').length  ?? 0
-  const collected = fees?.filter(f => f.status === 'paid').reduce((s, f) => s + Number(f.amount), 0) ?? 0
-  const pending   = fees?.filter(f => f.status !== 'paid').reduce((s, f) => s + Number(f.amount), 0) ?? 0
-  const attRate   = todayAtt?.length ? Math.round((present / todayAtt.length) * 100) : 0
+  try {
+    const [
+      studentsRes,
+      teachersRes,
+      classesRes,
+      attRes,
+      feesRes,
+    ] = await Promise.all([
+      supabase.from('students')
+        .select('*', { count: 'exact', head: true })
+        .eq('school_id', profile.school_id).eq('is_active', true),
+      supabase.from('teachers')
+        .select('*', { count: 'exact', head: true })
+        .eq('school_id', profile.school_id).eq('is_active', true),
+      supabase.from('classes')
+        .select('*', { count: 'exact', head: true })
+        .eq('school_id', profile.school_id).eq('is_active', true),
+      supabase.from('attendance')
+        .select('status')
+        .eq('school_id', profile.school_id).eq('date', today),
+      supabase.from('fees')
+        .select('amount, status')
+        .eq('school_id', profile.school_id),
+    ])
+    totalStudents = studentsRes.count ?? 0
+    totalTeachers = teachersRes.count ?? 0
+    totalClasses  = classesRes.count  ?? 0
+    todayAtt      = attRes.data  ?? []
+    fees          = feesRes.data ?? []
+  } catch (err) {
+    console.warn('DashboardPage: Failed to fetch from Supabase (offline?):', err)
+  }
+
+  const present   = todayAtt.filter(r => r.status === 'present').length
+  const absent    = todayAtt.filter(r => r.status === 'absent').length
+  const collected = fees.filter(f => f.status === 'paid').reduce((s, f) => s + Number(f.amount), 0)
+  const pending   = fees.filter(f => f.status !== 'paid').reduce((s, f) => s + Number(f.amount), 0)
+  const attRate   = todayAtt.length ? Math.round((present / todayAtt.length) * 100) : 0
 
   const dateStr = new Date().toLocaleDateString('en-PK', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
@@ -108,7 +123,7 @@ export default async function DashboardPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <div className="card" style={{ padding: '1.25rem' }}>
           <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', margin: '0 0 12px' }}>Today&apos;s Attendance</h3>
-          {todayAtt?.length === 0
+          {todayAtt.length === 0
             ? <p style={{ color: '#94a3b8', fontSize: 13 }}>No attendance marked yet today.</p>
             : <>
               <div style={{ display: 'flex', gap: 16 }}>

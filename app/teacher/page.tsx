@@ -11,42 +11,59 @@ export default async function TeacherDashboard() {
 
   const supabase = createClient()
 
-  const { data: teacherRow } = await supabase.from('teachers')
-    .select('class_assigned, subject, full_name').eq('email', profile.email).eq('school_id', profile.school_id).single()
+  let teacherRow: any = null
+  try {
+    const { data } = await supabase.from('teachers')
+      .select('class_assigned, subject, full_name').eq('email', profile.email).eq('school_id', profile.school_id).single()
+    teacherRow = data
+  } catch (err) {
+    console.warn('TeacherDashboard: Failed to fetch teacherRow (offline?):', err)
+  }
 
   const classAssigned = teacherRow?.class_assigned ?? ''
   const assignedClasses = parseAllClassesAssigned(classAssigned)
   const classNames = assignedClasses.map(c => c.class_name).filter(Boolean)
   const today = new Date().toISOString().split('T')[0]
 
-  let studentsQuery = supabase.from('students').select('id, class_name, section')
-    .eq('school_id', profile.school_id).eq('is_active', true)
-  
-  if (classNames.length > 0) {
-    studentsQuery = studentsQuery.in('class_name', classNames)
-  } else {
-    studentsQuery = studentsQuery.eq('id', '00000000-0000-0000-0000-000000000000') // matches nothing
+  let studentsData: any[] = []
+  let todayAtt: any[]    = []
+  let examsData: any[]   = []
+
+  try {
+    let studentsQuery = supabase.from('students').select('id, class_name, section')
+      .eq('school_id', profile.school_id).eq('is_active', true)
+
+    if (classNames.length > 0) {
+      studentsQuery = studentsQuery.in('class_name', classNames)
+    } else {
+      studentsQuery = studentsQuery.eq('id', '00000000-0000-0000-0000-000000000000') // matches nothing
+    }
+
+    const [studentsRes, attRes, examsRes] = await Promise.all([
+      studentsQuery,
+      supabase.from('attendance').select('status, student_id')
+        .eq('school_id', profile.school_id).eq('date', today),
+      classNames.length > 0
+        ? supabase.from('exams').select('id, class_name, section').eq('school_id', profile.school_id).in('class_name', classNames)
+        : Promise.resolve({ data: [] }),
+    ])
+    studentsData = studentsRes.data ?? []
+    todayAtt     = attRes.data     ?? []
+    examsData    = (examsRes as any).data ?? []
+  } catch (err) {
+    console.warn('TeacherDashboard: Failed to fetch from Supabase (offline?):', err)
   }
 
-  const [{ data: studentsData }, { data: todayAtt }, { data: examsData }] = await Promise.all([
-    studentsQuery,
-    supabase.from('attendance').select('status, student_id')
-      .eq('school_id', profile.school_id).eq('date', today),
-    classNames.length > 0 
-      ? supabase.from('exams').select('id, class_name, section').eq('school_id', profile.school_id).in('class_name', classNames)
-      : Promise.resolve({ data: [] }),
-  ])
-
-  const students = (studentsData ?? []).filter(student => 
-    assignedClasses.some(c => 
-      c.class_name === student.class_name && 
+  const students = studentsData.filter(student =>
+    assignedClasses.some(c =>
+      c.class_name === student.class_name &&
       (!c.section || c.section === student.section)
     )
   )
 
-  const exams = (examsData ?? []).filter(exam => 
-    assignedClasses.some(c => 
-      c.class_name === exam.class_name && 
+  const exams = examsData.filter(exam =>
+    assignedClasses.some(c =>
+      c.class_name === exam.class_name &&
       (!c.section || c.section === exam.section)
     )
   )

@@ -1,10 +1,9 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import ChangePasswordForm from '@/components/ChangePasswordForm'
+import { getProfile } from '@/lib/supabase/getProfile'
 
 export default async function TeacherAccountPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-  return <ChangePasswordForm email={user.email!} role="teacher" />
+  const profile = await getProfile()
+  if (!profile) redirect('/login')
+  return <ChangePasswordForm email={profile.email ?? ''} role="teacher" />
 }

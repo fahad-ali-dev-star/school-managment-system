@@ -10,12 +10,19 @@ export default async function ParentDashboard() {
 
   const supabase = createClient()
 
-  const { data: children } = await supabase.from('students')
-    .select('id, full_name, roll_number, class_name, section, fee_status, gender')
-    .eq('school_id', profile.school_id)
-    .ilike('parent_email', profile.email)
-    .eq('is_active', true)
-    .order('class_name')
+  let children: any[] = []
+
+  try {
+    const { data } = await supabase.from('students')
+      .select('id, full_name, roll_number, class_name, section, fee_status, gender')
+      .eq('school_id', profile.school_id)
+      .ilike('parent_email', profile.email)
+      .eq('is_active', true)
+      .order('class_name')
+    children = data ?? []
+  } catch (err) {
+    console.warn('ParentDashboard: Failed to fetch children (offline?):', err)
+  }
 
   const today = new Date().toISOString().split('T')[0]
   const dateStr = new Date().toLocaleDateString('en-PK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })

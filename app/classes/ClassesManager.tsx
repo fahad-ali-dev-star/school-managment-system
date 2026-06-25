@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import type { Class } from '@/types'
+import { isOffline, queueOfflineMutation, getMergedOfflineState, generateUUID } from '@/lib/offlineSync'
 
 const GRADES = ['Play-Group','Nursery','Prep','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10']
 const SECTIONS = ['A','B','C','D','E']
@@ -14,7 +15,7 @@ const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: '#37415
 const EMPTY_FORM = { name: '', section: 'A', class_teacher: '', capacity: 35, description: '' }
 
 export default function ClassesManager({ classes: init, schoolId }: { classes: any[]; schoolId: string }) {
-  const [classes, setClasses]       = useState<any[]>(init)
+  const [classes, setClasses]       = useState<any[]>(() => getMergedOfflineState('/api/classes', init))
   const [showForm, setShowForm]     = useState(false)
   const [editing, setEditing]       = useState<any>(null)
   const [viewing, setViewing]       = useState<any>(null)
@@ -73,6 +74,43 @@ export default function ClassesManager({ classes: init, schoolId }: { classes: a
     try {
       const url   = editing ? `/api/classes/${editing.id}` : '/api/classes'
       const method = editing ? 'PUT' : 'POST'
+
+      if (isOffline()) {
+        const classId = editing ? editing.id : generateUUID()
+        const classRecord = {
+          id: classId,
+          school_id: schoolId,
+          name: form.name,
+          section: form.section,
+          class_teacher: form.class_teacher || null,
+          capacity: Number(form.capacity),
+          description: form.description || null,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          student_count: editing ? editing.student_count : 0
+        }
+
+        queueOfflineMutation({
+          type: 'fetch',
+          target: url,
+          operation: method,
+          payload: classRecord,
+          matchKey: 'id',
+          matchValue: classId
+        })
+
+        if (editing) {
+          setClasses(p => p.map(c => c.id === editing.id ? classRecord : c))
+        } else {
+          setClasses(p => [...p, classRecord])
+        }
+
+        alert('Class details saved locally. Changes will sync automatically when online.')
+        setShowForm(false)
+        setSaving(false)
+        return
+      }
+
       const res   = await fetch(url, {
         method, headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, capacity: Number(form.capacity) }),
@@ -92,6 +130,20 @@ export default function ClassesManager({ classes: init, schoolId }: { classes: a
   async function handleDelete(id: string) {
     if (!confirm('Archive this class? Students will not be deleted.')) return
     setDeleting(id)
+    if (isOffline()) {
+      queueOfflineMutation({
+        type: 'fetch',
+        target: `/api/classes/${id}`,
+        operation: 'DELETE',
+        payload: { id },
+        matchKey: 'id',
+        matchValue: id
+      })
+      setClasses(p => p.filter(c => c.id !== id))
+      alert('Class deletion saved locally. Will sync automatically when online.')
+      setDeleting(null)
+      return
+    }
     await fetch(`/api/classes/${id}`, { method: 'DELETE' })
     setClasses(p => p.filter(c => c.id !== id))
     setDeleting(null)

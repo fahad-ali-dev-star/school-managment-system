@@ -5,6 +5,7 @@ import type { Student } from '@/types'
 import { PLAN_LIMITS, PlanType } from '@/lib/plans'
 import { Lock } from 'lucide-react'
 import PromoteStudentsModal from '@/components/PromoteStudentsModal'
+import { isOffline, queueOfflineMutation, getMergedOfflineState, generateUUID } from '@/lib/offlineSync'
 
 interface ClassOption { id: string; name: string; section: string }
 
@@ -29,7 +30,7 @@ export default function StudentsList({
   schoolId: string
   plan?: string
 }) {
-  const [students, setStudents] = useState<Student[]>(init)
+  const [students, setStudents] = useState<Student[]>(() => getMergedOfflineState('students', init))
   const [search, setSearch]     = useState('')
   const [cls, setCls]           = useState('')
   const [showForm, setShowForm] = useState(false)
@@ -84,7 +85,7 @@ export default function StudentsList({
   async function handleSave(e: React.FormEvent) {
     e.preventDefault(); setSaving(true); setError('')
     try {
-      const payload = {
+      const payload: any = {
         full_name: form.full_name, roll_number: form.roll_number,
         class_name: form.class_name, section: form.section, gender: form.gender,
         date_of_birth: form.date_of_birth || null,
@@ -93,6 +94,96 @@ export default function StudentsList({
         fee_status: form.fee_status,
         monthly_fee: form.monthly_fee ? parseFloat(form.monthly_fee) : null,
       }
+
+      if (isOffline()) {
+        const studentId = editing ? editing.id : generateUUID()
+        const now = new Date()
+        const todayStr = now.toISOString().split('T')[0]
+        const studentRecord: Student = {
+          id: studentId,
+          school_id: schoolId,
+          roll_number: payload.roll_number,
+          full_name: payload.full_name,
+          class_name: payload.class_name,
+          section: payload.section,
+          date_of_birth: payload.date_of_birth,
+          gender: payload.gender,
+          parent_name: payload.parent_name,
+          parent_phone: payload.parent_phone,
+          parent_email: payload.parent_email,
+          fee_status: payload.fee_status,
+          monthly_fee: payload.monthly_fee,
+          is_active: true,
+          admission_date: todayStr,
+          created_at: now.toISOString(),
+        }
+
+        if (editing) {
+          queueOfflineMutation({
+            type: 'supabase',
+            target: 'students',
+            operation: 'update',
+            payload: studentRecord,
+            matchKey: 'id',
+            matchValue: studentId
+          })
+          
+          if (editing.fee_status !== payload.fee_status) {
+            const paidDate = payload.fee_status === 'paid' ? todayStr : null
+            queueOfflineMutation({
+              type: 'supabase',
+              target: 'fees',
+              operation: 'update',
+              payload: { status: payload.fee_status, paid_date: paidDate },
+              matchKey: 'student_id',
+              matchValue: studentId
+            })
+          }
+
+          setStudents(p => p.map(s => s.id === studentId ? studentRecord : s))
+        } else {
+          queueOfflineMutation({
+            type: 'supabase',
+            target: 'students',
+            operation: 'insert',
+            payload: studentRecord
+          })
+
+          if (payload.monthly_fee && payload.monthly_fee > 0) {
+            const monthLabel = now.toLocaleString('default', { month: 'long' }) + ' ' + now.getFullYear()
+            const dueDate = new Date(now.getFullYear(), now.getMonth(), 15).toISOString().split('T')[0]
+            const receipt = 'RCP-' + Date.now().toString(36).toUpperCase()
+            
+            queueOfflineMutation({
+              type: 'supabase',
+              target: 'fees',
+              operation: 'insert',
+              payload: {
+                id: generateUUID(),
+                student_id: studentId,
+                school_id: schoolId,
+                fee_type: 'monthly',
+                month: monthLabel,
+                amount: payload.monthly_fee,
+                status: form.fee_status,
+                due_date: dueDate,
+                paid_date: form.fee_status === 'paid' ? todayStr : null,
+                payment_method: 'cash',
+                receipt_number: receipt,
+                notes: `Initial fee — added with student registration`,
+              }
+            })
+          }
+
+          setStudents(p => [...p, studentRecord])
+        }
+
+        alert('Saved locally. Your changes will sync automatically when you are back online.')
+        setShowForm(false)
+        setSaving(false)
+        return
+      }
+
       if (editing) {
         const { data, error: err } = await supabase.from('students').update(payload).eq('id', editing.id).select().single()
         if (err) { setError(err.message); setSaving(false); return }
@@ -172,6 +263,20 @@ export default function StudentsList({
   async function handleDelete(id: string) {
     if (!confirm('Delete this student? This cannot be undone.')) return
     setDeleting(id)
+    if (isOffline()) {
+      queueOfflineMutation({
+        type: 'supabase',
+        target: 'students',
+        operation: 'update',
+        payload: { is_active: false },
+        matchKey: 'id',
+        matchValue: id
+      })
+      setStudents(p => p.filter(s => s.id !== id))
+      alert('Delete saved locally. Your changes will sync automatically when you are back online.')
+      setDeleting(null)
+      return
+    }
     await supabase.from('students').update({ is_active: false }).eq('id', id)
     setStudents(p => p.filter(s => s.id !== id))
     setDeleting(null)

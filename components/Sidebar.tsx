@@ -8,6 +8,7 @@ import type { AuthUser } from '@/types'
 import { Lock } from 'lucide-react'
 import PlanGate from './PlanGate'
 import { PlanType, canAccess } from '@/lib/plans'
+import { isOffline, getOfflineQueue, syncOfflineQueue } from '@/lib/offlineSync'
 
 export interface NavItem {
   href: string
@@ -67,11 +68,56 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
   const supabase = createClient()
   const [open, setOpen]               = useState(false)
   const [clickedHref, setClickedHref] = useState<string | null>(null)
+  const [isOfflineMode, setIsOfflineMode] = useState(false)
+  const [pendingCount, setPendingCount] = useState(0)
+  const [syncing, setSyncing] = useState(false)
 
   const nav = navItems ?? navForRole(user.role)
   const initials = user.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
   const rc = ROLE_COLOR[user.role] ?? ROLE_COLOR.admin
   const currentPlan = (user.plan?.toLowerCase() || 'free') as PlanType
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    setIsOfflineMode(!navigator.onLine)
+    setPendingCount(getOfflineQueue().length)
+
+    const handleOnline = () => {
+      setIsOfflineMode(false)
+      syncOfflineQueue(supabase)
+    }
+    const handleOffline = () => {
+      setIsOfflineMode(true)
+    }
+
+    const handleQueueChanged = (e: Event) => {
+      setPendingCount((e as CustomEvent).detail.count)
+    }
+    const handleSyncStatus = (e: Event) => {
+      const { syncing: isSync, remaining } = (e as CustomEvent).detail
+      setSyncing(isSync)
+      if (remaining !== undefined) {
+        setPendingCount(remaining)
+      }
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    window.addEventListener('sms-queue-changed', handleQueueChanged)
+    window.addEventListener('sms-sync-status', handleSyncStatus)
+
+    if (navigator.onLine) {
+      syncOfflineQueue(supabase)
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+      window.removeEventListener('sms-queue-changed', handleQueueChanged)
+      window.removeEventListener('sms-sync-status', handleSyncStatus)
+    }
+  }, [supabase])
 
   // Close drawer and reset clicked highlight on route change
   useEffect(() => {
@@ -139,6 +185,42 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
             </div>
             <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>School ERP</p>
           </div>
+        </div>
+        {/* Connection Status Banner */}
+        <div style={{ marginTop: '0.75rem' }}>
+          {syncing ? (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '5px 10px', borderRadius: 8, background: '#eff6ff',
+              border: '1px solid #bfdbfe', color: '#1d4ed8', fontSize: 11, fontWeight: 600,
+            }}>
+              <span style={{
+                display: 'inline-block',
+                animation: 'spin 1s linear infinite',
+                fontSize: 12,
+              }}>🔄</span>
+              Syncing offline changes...
+            </div>
+          ) : isOfflineMode ? (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '5px 10px', borderRadius: 8, background: '#fffbeb',
+              border: '1px solid #fef3c7', color: '#b45309', fontSize: 11, fontWeight: 600,
+              animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            }}>
+              <span style={{ fontSize: 12 }}>⚠️</span>
+              Offline {pendingCount > 0 ? `(${pendingCount} pending)` : '(Ready)'}
+            </div>
+          ) : (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '4px 10px', borderRadius: 8, background: '#f0fdf4',
+              border: '1px solid #dcfce7', color: '#15803d', fontSize: 11, fontWeight: 600,
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
+              Connected
+            </div>
+          )}
         </div>
       </div>
  
@@ -247,7 +329,10 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
         </button>
       </div>
 
-      <style>{`@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }`}</style>
+      <style>{`
+        @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+      `}</style>
     </aside>
   )
 

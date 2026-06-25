@@ -19,9 +19,27 @@ interface Props {
 }
 
 import { revalidateDashboard } from './actions'
+import { isOffline, queueOfflineMutation, getOfflineQueue } from '@/lib/offlineSync'
 
 export default function AttendanceMarker({ students, classes, initialAttendance, teacherId, schoolId, date }: Props) {
-  const [att, setAtt]         = useState<Record<string, Status>>(initialAttendance as any)
+  const [att, setAtt]         = useState<Record<string, Status>>(() => {
+    const state = { ...initialAttendance } as Record<string, Status>
+    if (typeof window !== 'undefined') {
+      const queue = getOfflineQueue()
+      const relevantUpserts = queue.filter(
+        item => item.target === 'attendance' && item.operation === 'upsert'
+      )
+      relevantUpserts.forEach(item => {
+        const records = Array.isArray(item.payload) ? item.payload : [item.payload]
+        records.forEach((r: any) => {
+          if (r.date === date) {
+            state[r.student_id] = r.status
+          }
+        })
+      })
+    }
+    return state
+  })
   const [selClass, setClass]  = useState(classes[0] ?? '')
   const [saving, setSaving]   = useState(false)
   const [saved, setSaved]     = useState(false)
@@ -43,6 +61,30 @@ export default function AttendanceMarker({ students, classes, initialAttendance,
     setSaving(true)
 
     const studentIds = classStudents.map(s => s.id)
+
+    if (isOffline()) {
+      const records = classStudents.filter(s => att[s.id]).map(s => {
+        const row: any = {
+          school_id: schoolId, student_id: s.id, teacher_id: teacherId,
+          date, status: att[s.id],
+        }
+        return row
+      })
+
+      queueOfflineMutation({
+        type: 'supabase',
+        target: 'attendance',
+        operation: 'upsert',
+        payload: records
+      })
+
+      setSaving(false)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+      alert('Attendance saved locally. Your changes will sync automatically when you are back online.')
+      return
+    }
+
     const { data: existing } = await supabase.from('attendance')
       .select('id, student_id')
       .eq('school_id', schoolId)
