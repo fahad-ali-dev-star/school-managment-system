@@ -44,6 +44,7 @@ const PARENT_NAV: NavItem[] = [
   { href: '/parent/report-cards', label: 'Report Cards',  icon: '📄' },
   { href: '/parent/attendance',   label: 'Attendance',    icon: '✅' },
   { href: '/parent/fees',         label: 'Fees',          icon: '💰' },
+  { href: '/parent/leaves',       label: 'Leaves',        icon: '🏖️' },
   { href: '/parent/account',      label: 'My Account',    icon: '🔑' },
 ]
 
@@ -140,7 +141,7 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
           </div>
         </div>
       </div>
-
+ 
       {/* Nav */}
       <nav style={{ flex: 1, padding: '0.75rem' }}>
         {nav.map(item => {
@@ -155,7 +156,7 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
           if (item.href === '/parents' || item.href.startsWith('/parent')) gatedFeature = 'hasParentPortal'
           if (item.href === '/attendance') gatedFeature = 'hasAttendance'
           if (item.href === '/fees') gatedFeature = 'hasFees'
-          if (item.href === '/leaves') gatedFeature = 'hasLeaves'
+          if (item.href === '/leaves' || item.href === '/parent/leaves') gatedFeature = 'hasLeaves'
           if (item.href === '/notifications') gatedFeature = 'hasAlerts'
           if (item.href === '/analytics') gatedFeature = 'hasAnalytics'
 

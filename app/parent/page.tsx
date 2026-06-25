@@ -72,6 +72,7 @@ export default async function ParentDashboard() {
                 { href: '/parent/report-cards', label: '📄 Report Cards', bg: '#7c3aed' },
                 { href: '/parent/attendance',   label: '✅ Attendance',   bg: '#4f46e5' },
                 { href: '/parent/fees',         label: '💰 Fee Status',   bg: '#16a34a' },
+                { href: '/parent/leaves',       label: '🏖️ Apply Leaves', bg: '#0891b2' },
                 { href: '/parent/account',      label: '🔑 Change Password', bg: '#64748b' },
               ].map(a => (
                 <a key={a.href} href={a.href} style={{
