@@ -17,7 +17,32 @@ export const getProfile = cache(async () => {
     }
 
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+
+    // Try getUser() first (authenticates with Supabase Auth server).
+    // If it fails due to a network error, fall back to getSession() which
+    // reads the JWT directly from cookies — no network round-trip required.
+    // This prevents an infinite redirect loop when the Supabase Auth server
+    // is temporarily unreachable: getUser() throws → layout redirects to /login
+    // → middleware redirects back to the portal → repeat.
+    let user: any = null
+    try {
+      const { data, error } = await supabase.auth.getUser()
+      if (!error) {
+        user = data.user
+      } else {
+        console.warn('getProfile: getUser() returned error, falling back to getSession():', error.message)
+        const { data: sessionData } = await supabase.auth.getSession()
+        user = sessionData.session?.user ?? null
+      }
+    } catch (authErr: any) {
+      console.warn('getProfile: getUser() threw, falling back to getSession():', authErr?.message)
+      try {
+        const { data: sessionData } = await supabase.auth.getSession()
+        user = sessionData.session?.user ?? null
+      } catch {
+        user = null
+      }
+    }
 
     if (!user) {
       console.log('getProfile: No auth user found')
