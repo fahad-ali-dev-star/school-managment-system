@@ -1,7 +1,7 @@
 {
-  "name": "School Management ERP",
-  "short_name": "School ERP",
-  "description": "Comprehensive School Management Solution",
+  "name": "School Management System",
+  "short_name": "SMS",
+  "description": "Complete School Management Solution",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
