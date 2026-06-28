@@ -1,0 +1,44 @@
+name: Daily Supabase Backup + Keep Alive
+
+on:
+  schedule:
+    - cron: '0 21 * * *'  # runs every day at 9pm UTC = 2am Pakistan time (UTC+5)
+  workflow_dispatch:      # allows manual trigger from GitHub
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PostgreSQL client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Create backup
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          pg_dump "$DB_URL" \
+            --no-owner \
+            --no-acl \
+            --clean \
+            --if-exists \
+            -f "backup_${TIMESTAMP}.sql"
+          gzip "backup_${TIMESTAMP}.sql"
+          echo "Backup created: backup_${TIMESTAMP}.sql.gz"
+
+      - name: Upload backup as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-backup-${{ github.run_number }}
+          path: "*.sql.gz"
+          retention-days: 30   # keeps last 30 days of backups, free
+
+      - name: Keep Supabase project alive (ping)
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          curl -s "${SUPABASE_URL}/rest/v1/students?select=count" \
+            -H "apikey: ${SUPABASE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_KEY}" \
+          && echo "Ping successful — project stays active"
