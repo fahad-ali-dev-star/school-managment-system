@@ -192,49 +192,40 @@ export default function AIChatbot() {
   return (
     <>
       {/* Floating Action Button */}
-      <button
-        onClick={() => setIsOpen(prev => !prev)}
-        aria-label="Open AI assistant"
-        style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          zIndex: 50,
-          width: '56px',
-          height: '56px',
-          borderRadius: '50%',
-          background: isOpen ? '#374151' : '#1e1b4b',
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          boxShadow: '0 4px 20px rgba(30, 27, 75, 0.4)',
-          transition: 'background 0.2s',
-        }}
-      >
-        {isOpen ? <X size={22} /> : <Sparkles size={22} />}
-      </button>
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          aria-label="Open AI assistant"
+          className="ai-chat-btn"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            zIndex: 50,
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: '#1e1b4b',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            boxShadow: '0 4px 20px rgba(30, 27, 75, 0.4)',
+            transition: 'background 0.2s, transform 0.2s',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <Sparkles size={22} />
+        </button>
+      )}
 
       {/* Chat Window */}
       {isOpen && (
         <div
-          style={{
-            position: 'fixed',
-            bottom: '90px',
-            right: '24px',
-            zIndex: 50,
-            width: '360px',
-            maxHeight: '560px',
-            display: 'flex',
-            flexDirection: 'column',
-            background: 'white',
-            borderRadius: '16px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
-            overflow: 'hidden',
-          }}
+          className="ai-chat-window"
         >
           {/* Header */}
           <div
@@ -266,27 +257,50 @@ export default function AIChatbot() {
               <div style={{ fontSize: '11px', opacity: 0.75 }}>Powered by Gemini • Urdu & English</div>
             </div>
 
-            {/* Voice language toggle */}
-            <button
-              onClick={() => setVoiceLang(prev => prev === 'ur-PK' ? 'en-US' : 'ur-PK')}
-              title={`Voice language: ${voiceLang === 'ur-PK' ? 'Urdu' : 'English'} — click to switch`}
-              style={{
-                background: 'rgba(255,255,255,0.15)',
-                border: 'none',
-                borderRadius: '6px',
-                color: 'white',
-                fontSize: '11px',
-                fontWeight: 600,
-                padding: '4px 8px',
-                cursor: 'pointer',
-              }}
-            >
-              {voiceLang === 'ur-PK' ? '🇵🇰 اردو' : '🇺🇸 EN'}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {/* Voice language toggle */}
+              <button
+                onClick={() => setVoiceLang(prev => prev === 'ur-PK' ? 'en-US' : 'ur-PK')}
+                title={`Voice language: ${voiceLang === 'ur-PK' ? 'Urdu' : 'English'} — click to switch`}
+                style={{
+                  background: 'rgba(255,255,255,0.15)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  color: 'white',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  padding: '4px 8px',
+                  cursor: 'pointer',
+                }}
+              >
+                {voiceLang === 'ur-PK' ? '🇵🇰 اردو' : '🇺🇸 EN'}
+              </button>
+
+              {/* Header Close Button */}
+              <button
+                onClick={() => setIsOpen(false)}
+                aria-label="Close AI assistant"
+                title="Close Chat"
+                style={{
+                  background: 'rgba(255,255,255,0.15)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  color: 'white',
+                  padding: '4px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
           <div
+            className="ai-chat-messages"
             style={{
               flex: 1,
               overflowY: 'auto',
@@ -478,8 +492,49 @@ export default function AIChatbot() {
             </button>
           </div>
 
-          {/* Listening animation style */}
+          {/* Responsive stylesheet */}
           <style>{`
+            .ai-chat-window {
+              position: fixed;
+              bottom: 90px;
+              right: 24px;
+              z-index: 50;
+              width: 360px;
+              max-height: 560px;
+              display: flex;
+              flex-direction: column;
+              background: white;
+              border-radius: 16px;
+              border: 1px solid #e5e7eb;
+              box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+              overflow: hidden;
+              transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .ai-chat-btn {
+              transition: all 0.2s ease;
+            }
+
+            @media (max-width: 480px) {
+              .ai-chat-window {
+                bottom: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-height: 100vh !important;
+                max-height: -webkit-fill-available !important;
+                border-radius: 0 !important;
+                border: none !important;
+              }
+              .ai-chat-messages {
+                max-height: none !important;
+              }
+              .ai-chat-btn {
+                bottom: 16px !important;
+                right: 16px !important;
+              }
+            }
+
             @keyframes pulse {
               0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.3); }
               50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }

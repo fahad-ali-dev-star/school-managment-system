@@ -2,7 +2,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CreditCard, Check, Zap } from 'lucide-react'
+import { CreditCard, Check, Zap, Bot } from 'lucide-react'
 
 interface BillingProps {
   schoolId: string
@@ -60,7 +60,7 @@ export default function BillingManager({ schoolId, currentPlan = 'free' }: Billi
           <CreditCard size={24} />
         </div>
         <div style={{ flex: 1 }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Subscription & Billing</h2>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Subscription &amp; Billing</h2>
           <p style={{ fontSize: '0.875rem', color: '#64748b' }}>Manage your school's plan and invoices</p>
         </div>
         {currentPlan !== 'free' && (
@@ -82,24 +82,55 @@ export default function BillingManager({ schoolId, currentPlan = 'free' }: Billi
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+
+        {/* Free Plan */}
+        <PlanCard
+          name="Free"
+          price="$0"
+          isActive={currentPlan.toLowerCase() === 'free'}
+          isFree={true}
+          features={[
+            'Up to 50 Students',
+            'Core Operations',
+            'Smart Attendance',
+            'Fee Management',
+          ]}
+          onUpgrade={() => {}}
+          loading={false}
+        />
+
         {/* Basic Plan */}
-        <PlanCard 
+        <PlanCard
           name="Basic"
           price="$49"
           isActive={currentPlan.toLowerCase() === 'basic'}
-          features={['Up to 200 Students', 'Smart Attendance', 'Fee Management', 'Class Management']}
+          features={[
+            'Up to 200 Students',
+            'Everything in Free',
+            'Digital Exams & Marks',
+            'Leave Management',
+            'SMS / WhatsApp Alerts',
+            'Parent Portal',
+          ]}
           onUpgrade={() => handleUpgrade('price_1TWIMdBlPZJKU93IE7uwcvjS', 'Basic')}
           loading={loading === 'Basic'}
         />
 
         {/* Pro Plan */}
-        <PlanCard 
+        <PlanCard
           name="Professional"
           price="$99"
           isActive={currentPlan.toLowerCase() === 'pro'}
           isPopular={true}
-          features={['Unlimited Students', 'Digital Exams', 'Report Cards', 'SMS Alerts', 'Advanced Analytics']}
+          features={[
+            'Unlimited Students',
+            'Everything in Basic',
+            'Advanced Analytics',
+            'AI Chatbot Assistant',
+            'Priority Support',
+          ]}
+          aiFeature={true}
           onUpgrade={() => handleUpgrade('price_1TWIMeBlPZJKU93IcCdkMgPt', 'Professional')}
           loading={loading === 'Professional'}
         />
@@ -114,44 +145,76 @@ export default function BillingManager({ schoolId, currentPlan = 'free' }: Billi
   )
 }
 
-function PlanCard({ name, price, features, isActive, onUpgrade, loading, isPopular = false }: any) {
+function PlanCard({ name, price, features, isActive, onUpgrade, loading, isPopular = false, isFree = false, aiFeature = false }: any) {
   return (
     <div style={{ 
       padding: '1.5rem', 
       borderRadius: '16px', 
-      border: isActive ? '2px solid #4f46e5' : '1px solid #e2e8f0',
-      background: isActive ? '#f5f3ff' : 'white',
+      border: isActive ? '2px solid #4f46e5' : isPopular ? '2px solid #a855f7' : '1px solid #e2e8f0',
+      background: isActive ? '#f5f3ff' : isPopular ? 'linear-gradient(135deg, #faf5ff 0%, #f0f9ff 100%)' : 'white',
       position: 'relative'
     }}>
-      {isPopular && <span style={{ position: 'absolute', top: '-12px', right: '20px', background: '#4f46e5', color: 'white', padding: '2px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>Most Popular</span>}
+      {isPopular && (
+        <span style={{ 
+          position: 'absolute', top: '-12px', right: '20px', 
+          background: 'linear-gradient(135deg, #4f46e5, #a855f7)', 
+          color: 'white', padding: '2px 12px', borderRadius: '20px', 
+          fontSize: '0.75rem', fontWeight: 700 
+        }}>
+          Most Popular
+        </span>
+      )}
       
-      <h3 style={{ fontWeight: 700, fontSize: '1.125rem' }}>{name}</h3>
-      <div style={{ fontSize: '1.5rem', fontWeight: 800, margin: '1rem 0' }}>{price}<span style={{ fontSize: '0.875rem', fontWeight: 400, color: '#64748b' }}>/mo</span></div>
+      <h3 style={{ fontWeight: 700, fontSize: '1.125rem', color: '#1e293b' }}>{name}</h3>
+      <div style={{ fontSize: '1.75rem', fontWeight: 800, margin: '1rem 0', color: isPopular ? '#4f46e5' : '#1e293b' }}>
+        {price}
+        <span style={{ fontSize: '0.875rem', fontWeight: 400, color: '#64748b' }}>/mo</span>
+      </div>
       
       <ul style={{ listStyle: 'none', padding: 0, margin: '1.5rem 0', fontSize: '0.875rem' }}>
         {features.map((f: string, i: number) => (
           <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: '#475569' }}>
-            <Check size={16} style={{ color: '#10b981' }} /> {f}
+            <Check size={16} style={{ color: '#10b981', flexShrink: 0 }} /> {f}
           </li>
         ))}
+        {/* AI Chatbot badge for Pro */}
+        {aiFeature && (
+          <li style={{ 
+            display: 'flex', alignItems: 'center', gap: '0.5rem', 
+            marginTop: '0.5rem', padding: '0.5rem 0.75rem',
+            background: 'linear-gradient(135deg, #f5f3ff, #ede9fe)',
+            borderRadius: '8px', border: '1px solid #c4b5fd',
+            color: '#6d28d9', fontWeight: 600, fontSize: '0.8rem'
+          }}>
+            <Bot size={14} style={{ flexShrink: 0 }} />
+            AI Chatbot — Pro Exclusive ✨
+          </li>
+        )}
       </ul>
 
       <button 
         onClick={onUpgrade}
-        disabled={isActive || loading}
+        disabled={isActive || loading || isFree}
         style={{ 
           width: '100%', 
           padding: '0.75rem', 
           borderRadius: '10px', 
           border: 'none',
-          background: isActive ? '#10b981' : '#4f46e5',
-          color: 'white',
+          background: isActive
+            ? '#10b981'
+            : isFree
+            ? '#e2e8f0'
+            : isPopular
+            ? 'linear-gradient(135deg, #4f46e5, #a855f7)'
+            : '#4f46e5',
+          color: isFree ? '#94a3b8' : 'white',
           fontWeight: 600,
-          cursor: isActive ? 'default' : 'pointer',
-          opacity: loading ? 0.7 : 1
+          cursor: isActive || isFree ? 'default' : 'pointer',
+          opacity: loading ? 0.7 : 1,
+          fontSize: '0.9rem'
         }}
       >
-        {loading ? 'Processing...' : isActive ? 'Current Plan' : `Upgrade to ${name}`}
+        {loading ? 'Processing...' : isActive ? '✓ Current Plan' : isFree ? 'Free Forever' : `Upgrade to ${name}`}
       </button>
     </div>
   )

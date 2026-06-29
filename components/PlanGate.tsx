@@ -56,7 +56,7 @@ export default function PlanGate({
         border: '1px solid #e2e8f0'
       }}>
         <Lock size={16} />
-        {currentPlan === 'basic' ? 'Pro Feature' : 'Upgrade Required'}
+        {currentPlan === 'free' ? 'Basic Feature' : currentPlan === 'basic' ? 'Pro Feature' : 'Upgrade Required'}
       </div>
       {children}
     </div>

@@ -9,11 +9,12 @@ export interface PlanFeatures {
   hasExams: boolean;
   hasLeaves: boolean;
   hasAlerts: boolean;
-  hasAnalytics: boolean;
+  hasAnalytics: boolean; // AI Chatbot — Pro only
   hasParentPortal: boolean;
 }
 
 export const PLAN_LIMITS: Record<PlanType, PlanFeatures> = {
+  // Free plan: core ops only — same as what "Basic" used to be
   free: {
     maxStudents: 50,
     hasCoreOps: true,
@@ -25,17 +26,21 @@ export const PLAN_LIMITS: Record<PlanType, PlanFeatures> = {
     hasAnalytics: false,
     hasParentPortal: false
   },
+
+  // Basic plan: now has what "Pro" used to offer, EXCEPT AI Chatbot (hasAnalytics)
   basic: {
     maxStudents: 200,
     hasCoreOps: true,
     hasAttendance: true,
     hasFees: true,
-    hasExams: false,
-    hasLeaves: false,
-    hasAlerts: false,
-    hasAnalytics: false,
-    hasParentPortal: false
+    hasExams: true,
+    hasLeaves: true,
+    hasAlerts: true,
+    hasAnalytics: false, // AI Chatbot NOT included in Basic
+    hasParentPortal: true
   },
+
+  // Pro plan: everything including AI Chatbot
   pro: {
     maxStudents: 999999,
     hasCoreOps: true,
@@ -44,7 +49,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanFeatures> = {
     hasExams: true,
     hasLeaves: true,
     hasAlerts: true,
-    hasAnalytics: true,
+    hasAnalytics: true, // AI Chatbot — Pro exclusive
     hasParentPortal: true
   }
 };

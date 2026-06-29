@@ -39,6 +39,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         fallback={
           <button
             title="AI Chatbot (Upgrade to Pro)"
+            className="ai-chat-btn"
             style={{
               position: 'fixed',
               bottom: '24px',
