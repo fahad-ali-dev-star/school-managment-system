@@ -42,12 +42,44 @@ export async function GET() {
     supabase.from('notification_logs').select('status, type, created_at').eq('school_id', sid),
   ])
 
-  // ── 2. Fee chart — monthly collected vs pending ──────────────
-  const feeByMonth: Record<string, { month: string; collected: number; pending: number; overdue: number }> = {}
-  const MONTH_ORDER = ['January 2026', 'February 2026', 'March 2026', 'April 2026']
+  // ── 2. Fee chart — monthly collected vs pending (dynamic) ──────────────
+  const now = new Date()
+  const currentMonthLabel = now.toLocaleString('default', { month: 'long' }) + ' ' + now.getFullYear()
 
+  const monthLabelsSet = new Set<string>()
+  ;(allFees ?? []).forEach(f => {
+    if (f.month) monthLabelsSet.add(f.month)
+  })
+  monthLabelsSet.add(currentMonthLabel)
+
+  // Parse month label (e.g. "July 2026") into a timestamp for sorting
+  const parseMonthToTimestamp = (m: string) => {
+    const parts = m.split(' ')
+    const monthName = parts[0]
+    const year = parseInt(parts[1] || '0', 10)
+    const monthIdx = new Date(`${monthName} 1, 2000`).getMonth()
+    return new Date(year, monthIdx, 1).getTime()
+  }
+
+  // Sort months chronologically (ascending)
+  const MONTH_ORDER = Array.from(monthLabelsSet).sort((a, b) => {
+    return parseMonthToTimestamp(a) - parseMonthToTimestamp(b)
+  })
+
+  // Format short label for the chart (e.g. "Jul '26")
+  const getShortMonthLabel = (m: string) => {
+    const parts = m.split(' ')
+    if (parts.length < 2) return m
+    const monthName = parts[0]
+    const yearStr = parts[1]
+    const shortMonth = monthName.slice(0, 3)
+    const shortYear = yearStr.slice(-2)
+    return `${shortMonth} '${shortYear}`
+  }
+
+  const feeByMonth: Record<string, { month: string; collected: number; pending: number; overdue: number }> = {}
   MONTH_ORDER.forEach(m => {
-    feeByMonth[m] = { month: m.split(' ')[0], collected: 0, pending: 0, overdue: 0 }
+    feeByMonth[m] = { month: getShortMonthLabel(m), collected: 0, pending: 0, overdue: 0 }
   })
 
   ;(allFees ?? []).forEach(f => {

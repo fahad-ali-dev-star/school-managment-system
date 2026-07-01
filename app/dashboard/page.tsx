@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getProfile } from '@/lib/supabase/getProfile'
+import { ensureCurrentMonthFees } from '@/lib/feeService'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,6 +12,8 @@ export default async function DashboardPage() {
   const supabase = createClient()
 
   const today = new Date().toISOString().split('T')[0]
+  const now = new Date()
+  const currentMonthLabel = now.toLocaleString('default', { month: 'long' }) + ' ' + now.getFullYear()
 
   let totalStudents = 0
   let totalTeachers = 0
@@ -19,6 +22,9 @@ export default async function DashboardPage() {
   let fees: any[]     = []
 
   try {
+    // Automatically generate fees for the current month if not already generated
+    await ensureCurrentMonthFees(supabase, profile.school_id)
+
     const [
       studentsRes,
       teachersRes,
@@ -40,7 +46,8 @@ export default async function DashboardPage() {
         .eq('school_id', profile.school_id).eq('date', today),
       supabase.from('fees')
         .select('amount, status')
-        .eq('school_id', profile.school_id),
+        .eq('school_id', profile.school_id)
+        .eq('month', currentMonthLabel),
     ])
     totalStudents = studentsRes.count ?? 0
     totalTeachers = teachersRes.count ?? 0

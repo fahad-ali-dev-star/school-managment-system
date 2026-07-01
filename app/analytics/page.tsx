@@ -60,10 +60,46 @@ export default async function AnalyticsPage() {
   const totalAtt       = allAttendance.length
   const attRate        = totalAtt > 0 ? Math.round((totalPresent / totalAtt) * 100) : 0
 
-  // Fee by month
-  const MONTHS = ['January 2026', 'February 2026', 'March 2026', 'April 2026']
+  // Fee by month (dynamic based on available fee records)
+  const now = new Date()
+  const currentMonthLabel = now.toLocaleString('default', { month: 'long' }) + ' ' + now.getFullYear()
+
+  const monthLabelsSet = new Set<string>()
+  allFees.forEach(f => {
+    if (f.month) monthLabelsSet.add(f.month)
+  })
+  monthLabelsSet.add(currentMonthLabel)
+
+  // Parse month label (e.g. "July 2026") into a timestamp for sorting
+  const parseMonthToTimestamp = (m: string) => {
+    const parts = m.split(' ')
+    const monthName = parts[0]
+    const year = parseInt(parts[1] || '0', 10)
+    const monthIdx = new Date(`${monthName} 1, 2000`).getMonth()
+    return new Date(year, monthIdx, 1).getTime()
+  }
+
+  // Sort months chronologically (ascending)
+  const MONTHS = Array.from(monthLabelsSet).sort((a, b) => {
+    return parseMonthToTimestamp(a) - parseMonthToTimestamp(b)
+  })
+
+  // Format short label for the chart (e.g. "Jul '26")
+  const getShortMonthLabel = (m: string) => {
+    const parts = m.split(' ')
+    if (parts.length < 2) return m
+    const monthName = parts[0]
+    const yearStr = parts[1]
+    const shortMonth = monthName.slice(0, 3)
+    const shortYear = yearStr.slice(-2)
+    return `${shortMonth} '${shortYear}`
+  }
+
   const feeByMonth: Record<string, any> = {}
-  MONTHS.forEach(m => { feeByMonth[m] = { month: m.split(' ')[0], collected: 0, pending: 0, overdue: 0 } })
+  MONTHS.forEach(m => {
+    feeByMonth[m] = { month: getShortMonthLabel(m), collected: 0, pending: 0, overdue: 0 }
+  })
+
   allFees.forEach(f => {
     if (!f.month || !feeByMonth[f.month]) return
     const a = Number(f.amount)

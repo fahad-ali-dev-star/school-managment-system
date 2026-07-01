@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import FeesManager from './FeesManager'
 import { getProfile } from '@/lib/supabase/getProfile'
+import { ensureCurrentMonthFees } from '@/lib/feeService'
 
 export default async function FeesPage() {
   const profile = await getProfile()
@@ -13,6 +14,9 @@ export default async function FeesPage() {
   let students: any[] = []
 
   try {
+    // Automatically generate fees for the current month if not already generated
+    await ensureCurrentMonthFees(supabase, profile.school_id)
+
     const [feesRes, studentsRes] = await Promise.all([
       supabase.from('fees')
         .select('*, students(full_name, roll_number, class_name)')

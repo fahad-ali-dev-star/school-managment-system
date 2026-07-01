@@ -112,6 +112,19 @@ export async function GET(request: Request) {
         continue
       }
 
+      // 7. Update student fee_status to 'pending' for the newly generated ones
+      const studentIdsToUpdate = toInsert.map((f: any) => f.student_id)
+      if (studentIdsToUpdate.length > 0) {
+        const { error: studentUpdateError } = await supabase
+          .from('students')
+          .update({ fee_status: 'pending' })
+          .in('id', studentIdsToUpdate)
+
+        if (studentUpdateError) {
+          errors.push(`School ${school.id} (student status update): ${studentUpdateError.message}`)
+        }
+      }
+
       totalFeesCreated += toInsert.length
     }
 
