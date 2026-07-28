@@ -11,6 +11,7 @@ export interface PlanFeatures {
   hasAlerts: boolean;
   hasAnalytics: boolean; // AI Chatbot — Pro only
   hasParentPortal: boolean;
+  hasHolidayMgmt: boolean; // Holiday management — Basic & Pro
 }
 
 export const PLAN_LIMITS: Record<PlanType, PlanFeatures> = {
@@ -24,7 +25,8 @@ export const PLAN_LIMITS: Record<PlanType, PlanFeatures> = {
     hasLeaves: false,
     hasAlerts: false,
     hasAnalytics: false,
-    hasParentPortal: false
+    hasParentPortal: false,
+    hasHolidayMgmt: false  // Free: read-only calendar only (no management)
   },
 
   // Basic plan: now has what "Pro" used to offer, EXCEPT AI Chatbot (hasAnalytics)
@@ -37,7 +39,8 @@ export const PLAN_LIMITS: Record<PlanType, PlanFeatures> = {
     hasLeaves: true,
     hasAlerts: true,
     hasAnalytics: false, // AI Chatbot NOT included in Basic
-    hasParentPortal: true
+    hasParentPortal: true,
+    hasHolidayMgmt: true  // Full holiday management in Basic
   },
 
   // Pro plan: everything including AI Chatbot
@@ -50,7 +53,8 @@ export const PLAN_LIMITS: Record<PlanType, PlanFeatures> = {
     hasLeaves: true,
     hasAlerts: true,
     hasAnalytics: true, // AI Chatbot — Pro exclusive
-    hasParentPortal: true
+    hasParentPortal: true,
+    hasHolidayMgmt: true  // Full holiday management in Pro
   }
 };
 

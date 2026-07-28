@@ -20,6 +20,7 @@ export default async function DashboardPage() {
   let totalClasses  = 0
   let todayAtt: any[] = []
   let fees: any[]     = []
+  let upcomingHolidays: any[] = []
 
   try {
     // Automatically generate fees for the current month if not already generated
@@ -31,6 +32,7 @@ export default async function DashboardPage() {
       classesRes,
       attRes,
       feesRes,
+      holidaysRes,
     ] = await Promise.all([
       supabase.from('students')
         .select('*', { count: 'exact', head: true })
@@ -48,12 +50,19 @@ export default async function DashboardPage() {
         .select('amount, status')
         .eq('school_id', profile.school_id)
         .eq('month', currentMonthLabel),
+      supabase.from('holidays')
+        .select('id, title, date, type')
+        .eq('school_id', profile.school_id)
+        .gte('date', today)
+        .order('date', { ascending: true })
+        .limit(3),
     ])
-    totalStudents = studentsRes.count ?? 0
-    totalTeachers = teachersRes.count ?? 0
-    totalClasses  = classesRes.count  ?? 0
-    todayAtt      = attRes.data  ?? []
-    fees          = feesRes.data ?? []
+    totalStudents    = studentsRes.count ?? 0
+    totalTeachers    = teachersRes.count ?? 0
+    totalClasses     = classesRes.count  ?? 0
+    todayAtt         = attRes.data  ?? []
+    fees             = feesRes.data ?? []
+    upcomingHolidays = holidaysRes.data ?? []
   } catch (err) {
     console.warn('DashboardPage: Failed to fetch from Supabase (offline?):', err)
   }
@@ -116,6 +125,7 @@ export default async function DashboardPage() {
             { href: '/attendance', label: '✅ Mark Attendance',   bg: '#4f46e5' },
             { href: '/students',   label: '👨‍🎓 Add Student',       bg: '#0891b2' },
             { href: '/fees',       label: '💰 Record Payment',    bg: '#16a34a' },
+            { href: '/holidays',   label: '🗓️ Holidays',          bg: '#d97706' },
           ].map(a => (
             <a key={a.href} href={a.href} style={{
               padding: '9px 16px', borderRadius: 8, background: a.bg,
@@ -126,8 +136,8 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Today summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+      {/* Today summary + Upcoming Holidays */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
         <div className="card" style={{ padding: '1.25rem' }}>
           <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', margin: '0 0 12px' }}>Today&apos;s Attendance</h3>
           {todayAtt.length === 0
@@ -161,6 +171,41 @@ export default async function DashboardPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Upcoming Holidays Widget */}
+        <div className="card" style={{ padding: '1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', margin: 0 }}>🗓️ Upcoming Holidays</h3>
+            <a href="/holidays" style={{ fontSize: 12, color: '#4f46e5', textDecoration: 'none', fontWeight: 600 }}>View all →</a>
+          </div>
+          {upcomingHolidays.length === 0 ? (
+            <p style={{ color: '#94a3b8', fontSize: 13 }}>No upcoming holidays</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {upcomingHolidays.map((h: any) => {
+                const typeColors: Record<string, { bg: string; color: string; emoji: string }> = {
+                  national:   { bg: '#fef2f2', color: '#dc2626', emoji: '🇵🇰' },
+                  school:     { bg: '#f5f3ff', color: '#7c3aed', emoji: '🏫' },
+                  exam_break: { bg: '#fffbeb', color: '#d97706', emoji: '📝' },
+                  summer:     { bg: '#f0f9ff', color: '#0284c7', emoji: '☀️' },
+                  winter:     { bg: '#ecfeff', color: '#0891b2', emoji: '❄️' },
+                }
+                const t = typeColors[h.type] ?? typeColors.national
+                return (
+                  <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, background: t.bg, border: `1px solid ${t.color}22` }}>
+                    <span style={{ fontSize: 18, flexShrink: 0 }}>{t.emoji}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.title}</p>
+                      <p style={{ fontSize: 11, color: t.color, margin: '1px 0 0', fontWeight: 600 }}>
+                        {new Date(h.date + 'T00:00:00').toLocaleDateString('en-PK', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

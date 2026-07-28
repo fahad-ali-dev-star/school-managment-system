@@ -12,18 +12,26 @@ export default async function AttendancePage() {
 
   let students: any[] = []
   let existing: any[] = []
+  let todayHoliday: { title: string; type: string } | null = null
 
   try {
-    const [studentsRes, existingRes] = await Promise.all([
+    const [studentsRes, existingRes, holidayRes] = await Promise.all([
       supabase.from('students')
         .select('id, full_name, roll_number, class_name, section')
         .eq('school_id', profile.school_id).eq('is_active', true)
         .order('class_name').order('roll_number'),
       supabase.from('attendance').select('student_id, status')
         .eq('school_id', profile.school_id).eq('date', today),
+      supabase.from('holidays').select('title, type')
+        .eq('school_id', profile.school_id)
+        .lte('date', today)
+        .or(`end_date.gte.${today},end_date.is.null`)
+        .gte('date', today)
+        .maybeSingle(),
     ])
     students = studentsRes.data ?? []
     existing = existingRes.data ?? []
+    todayHoliday = holidayRes.data ?? null
   } catch (err) {
     console.warn('AttendancePage: Failed to fetch from Supabase (offline?):', err)
   }
@@ -37,6 +45,7 @@ export default async function AttendancePage() {
       students={students} classes={classes}
       initialAttendance={attMap}
       teacherId={profile.id} schoolId={profile.school_id} date={today}
+      todayHoliday={todayHoliday}
     />
   )
 }

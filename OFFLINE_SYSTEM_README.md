@@ -1,7 +1,7 @@
 # Offline System Implementation Guide
-## Beacon Light School ERP — Next.js 14 + Supabase + Vercel
+##  School Management ERP — Next.js 14 + Supabase + Vercel
 
-> **For GitHub Copilot:** This document contains complete, step-by-step instructions to add a zero-cost offline system to the existing ERP. Follow each section in order. Do not skip steps. All code is production-ready and tailored to this project's stack.
+> **For Antigravity Agent:** This document contains complete, step-by-step instructions to add a zero-cost offline system to the existing ERP. Follow each section in order. Do not skip steps. All code is production-ready and tailored to this project's stack.
 
 ---
 
@@ -31,7 +31,7 @@
 
 ## 1. Overview
 
-The Beacon Light School ERP currently runs fully online on Vercel + Supabase. This guide adds **offline support** with **zero additional cost** using:
+The School Management ERP currently runs fully online on Vercel + Supabase. This guide adds **offline support** with **zero additional cost** using:
 
 - **PWA Service Worker** — caches app pages/assets (already partially set up via `next-pwa`)
 - **Dexie.js + IndexedDB** — stores school data locally in the browser
@@ -127,7 +127,7 @@ localDb.version(1).stores({
 export default localDb
 ```
 
-> **Copilot note:** If this project has additional tables (timetable, results, announcements), add them here following the same pattern. The index fields should match the columns you filter by most often.
+> **Antigravity note:** If this project has additional tables (timetable, results, announcements), add them here following the same pattern. The index fields should match the columns you filter by most often.
 
 ---
 
@@ -520,7 +520,7 @@ import AppInitializer from '@/components/AppInitializer'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Beacon Light School ERP',
+  title: ' School Management ERP',
   description: 'School Management System',
   manifest: '/manifest.json',
 }
@@ -1002,4 +1002,4 @@ When implementing this system, follow these rules strictly:
 
 ## Summary
 
-This implementation adds full offline support to the Beacon Light School ERP at zero cost. The Service Worker caches all app pages, IndexedDB stores all school data locally, and the sync queue automatically pushes offline writes to Supabase when the internet returns. No paid services, no Supabase Pro required, and it works for 350+ students without hitting any free tier limits.
+This implementation adds full offline support to the School Management ERP at zero cost. The Service Worker caches all app pages, IndexedDB stores all school data locally, and the sync queue automatically pushes offline writes to Supabase when the internet returns. No paid services, no Supabase Pro required, and it works for 350+ students without hitting any free tier limits.

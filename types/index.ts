@@ -171,3 +171,53 @@ export interface NotificationTemplate {
   is_active: boolean
   created_at: string
 }
+
+export interface Holiday {
+  id: string
+  school_id: string
+  title: string
+  date: string
+  end_date?: string
+  type: 'national' | 'school' | 'exam_break' | 'summer' | 'winter'
+  description?: string
+  created_at: string
+}
+
+export interface HolidayHomework {
+  id: string
+  school_id: string
+  teacher_id: string
+  class_name: string
+  subject: string
+  title: string
+  description?: string
+  due_date: string
+  attachments?: string[]
+  created_at: string
+  teacher?: { full_name: string }
+  submission_count?: number
+}
+
+export interface HomeworkSubmission {
+  id: string
+  homework_id: string
+  student_id: string
+  notes?: string
+  submitted_at: string
+  status: 'submitted' | 'reviewed' | 'late'
+  student?: { full_name: string; roll_number: string; class_name: string }
+}
+
+export interface StudyMaterial {
+  id: string
+  school_id: string
+  teacher_id: string
+  class_name: string
+  subject: string
+  title: string
+  type: 'pdf' | 'video' | 'link' | 'note'
+  url?: string
+  content?: string
+  created_at: string
+  teacher?: { full_name: string }
+}

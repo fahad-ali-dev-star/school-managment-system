@@ -16,12 +16,13 @@ interface Student { id: string; full_name: string; roll_number: string; class_na
 interface Props {
   students: Student[]; classes: string[]; initialAttendance: Record<string, string>
   teacherId: string; schoolId: string; date: string
+  todayHoliday?: { title: string; type: string } | null
 }
 
 import { revalidateDashboard } from './actions'
 import { isOffline, queueOfflineMutation, getOfflineQueue } from '@/lib/offlineSync'
 
-export default function AttendanceMarker({ students, classes, initialAttendance, teacherId, schoolId, date }: Props) {
+export default function AttendanceMarker({ students, classes, initialAttendance, teacherId, schoolId, date, todayHoliday }: Props) {
   const [att, setAtt]         = useState<Record<string, Status>>(() => {
     const state = { ...initialAttendance } as Record<string, Status>
     if (typeof window !== 'undefined') {
@@ -126,7 +127,27 @@ export default function AttendanceMarker({ students, classes, initialAttendance,
         <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>{displayDate}</p>
       </div>
 
-      {/* Class tabs */}
+      {/* Holiday Banner */}
+      {todayHoliday && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 14, padding: '1rem 1.25rem',
+          borderRadius: 10, background: '#fffbeb', border: '1.5px solid #fcd34d',
+          marginBottom: '1.5rem', boxShadow: '0 2px 8px rgba(251,191,36,0.15)',
+        }}>
+          <span style={{ fontSize: 32, flexShrink: 0 }}>🏖️</span>
+          <div>
+            <p style={{ fontSize: 15, fontWeight: 700, color: '#92400e', margin: 0 }}>
+              School is closed today — {todayHoliday.title}
+            </p>
+            <p style={{ fontSize: 13, color: '#a16207', margin: '3px 0 0' }}>
+              Today is a holiday. Attendance marking is optional. Any records saved will still be stored.
+            </p>
+          </div>
+          <a href="/holidays" style={{ marginLeft: 'auto', padding: '6px 14px', borderRadius: 8, background: '#fef3c7', border: '1px solid #fcd34d', color: '#92400e', fontSize: 12, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            View Calendar →
+          </a>
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: '1.25rem' }}>
         {classes.map(c => (
           <button key={c} onClick={() => setClass(c)} style={{

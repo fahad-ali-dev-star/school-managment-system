@@ -27,6 +27,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/exams',         label: 'Exams',          icon: '📝' },
   { href: '/report-cards',  label: 'Report Cards',   icon: '📄' },
   { href: '/leaves',        label: 'Leaves',         icon: '🏖️' },
+  { href: '/holidays',      label: 'Holidays',       icon: '🗓️' },
   { href: '/notifications', label: 'Alerts',         icon: '📱' },
   { href: '/analytics',     label: 'Analytics',      icon: '📊' },
   { href: '/dashboard/settings', label: 'Settings',   icon: '⚙️' },
@@ -37,6 +38,7 @@ const TEACHER_NAV: NavItem[] = [
   { href: '/teacher/attendance',   label: 'Attendance',    icon: '✅' },
   { href: '/teacher/exams',        label: 'Exams & Marks', icon: '📝' },
   { href: '/teacher/report-cards', label: 'Report Cards',  icon: '📄' },
+  { href: '/teacher/holidays',     label: 'Holidays',      icon: '🗓️' },
   { href: '/teacher/account',      label: 'My Account',    icon: '🔑' },
 ]
 
@@ -46,6 +48,7 @@ const PARENT_NAV: NavItem[] = [
   { href: '/parent/attendance',   label: 'Attendance',    icon: '✅' },
   { href: '/parent/fees',         label: 'Fees',          icon: '💰' },
   { href: '/parent/leaves',       label: 'Leaves',        icon: '🏖️' },
+  { href: '/parent/holidays',     label: 'Holidays',      icon: '🗓️' },
   { href: '/parent/account',      label: 'My Account',    icon: '🔑' },
 ]
 
@@ -241,6 +244,7 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
           if (item.href === '/leaves' || item.href === '/parent/leaves') gatedFeature = 'hasLeaves'
           if (item.href === '/notifications') gatedFeature = 'hasAlerts'
           if (item.href === '/analytics') gatedFeature = 'hasAnalytics'
+          if (item.href === '/holidays' || item.href === '/teacher/holidays' || item.href === '/parent/holidays') gatedFeature = null // holidays always visible (plan gate is inside the page)
 
           if (gatedFeature && !canAccess(currentPlan, gatedFeature)) {
             return null
