@@ -68,13 +68,8 @@ export async function sendSMS(to: string, message: string) {
 export async function sendNotification(
   to: string,
   message: string,
-  channel: 'whatsapp' | 'sms' | 'both'
+  channel: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (channel === 'whatsapp') return sendWhatsApp(to, message)
-  if (channel === 'sms')      return sendSMS(to, message)
-
-  // Both — send to both, succeed if at least one works
-  const [wa, sms] = await Promise.all([sendWhatsApp(to, message), sendSMS(to, message)])
-  if (wa.success || sms.success) return { success: true }
-  return { success: false, error: `WA: ${wa.error} | SMS: ${sms.error}` }
+  // Twilio sending is bypassed. Notifications are logged to the database and delivered directly to the Parent Portal.
+  return { success: true }
 }

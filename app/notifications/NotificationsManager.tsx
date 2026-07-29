@@ -52,19 +52,19 @@ export default function NotificationsManager({
 
   // Quick send form
   const [quickForm, setQuickForm] = useState({
-    student_id: '', type: 'attendance', channel: 'whatsapp' as 'whatsapp' | 'sms' | 'both',
+    student_id: '', type: 'attendance', channel: 'portal' as any,
   })
 
   // Bulk form
   const [bulkForm, setBulkForm] = useState({
-    type: 'announcement', channel: 'whatsapp' as 'whatsapp' | 'sms' | 'both',
+    type: 'announcement', channel: 'portal' as any,
     class_name: '', section: '', custom_message: '',
     target: 'class' as 'class' | 'absent' | 'pending_fees' | 'all',
   })
 
   // Custom message form
   const [customForm, setCustomForm] = useState({
-    student_id: '', channel: 'whatsapp' as 'whatsapp' | 'sms' | 'both', message: '',
+    student_id: '', channel: 'portal' as any, message: '',
   })
 
   // Template edit
@@ -315,23 +315,8 @@ export default function NotificationsManager({
                   ))}
                 </div>
               </div>
-              <div>
-                <label style={lbl}>Send via</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {(['whatsapp', 'sms', 'both'] as const).map(ch => (
-                    <button key={ch} onClick={() => setQuickForm(f => ({ ...f, channel: ch }))}
-                      style={{
-                        flex: 1, padding: '8px', borderRadius: 8, cursor: 'pointer', border: `2px solid ${quickForm.channel === ch ? '#4f46e5' : '#e2e8f0'}`,
-                        background: quickForm.channel === ch ? '#eef2ff' : 'white', fontFamily: 'inherit',
-                        fontSize: 12, fontWeight: quickForm.channel === ch ? 600 : 400, color: quickForm.channel === ch ? '#4f46e5' : '#475569',
-                      }}>
-                      {ch === 'whatsapp' ? '💬 WhatsApp' : ch === 'sms' ? '📱 SMS' : '📲 Both'}
-                    </button>
-                  ))}
-                </div>
-              </div>
               <button onClick={handleQuickSend} disabled={sending || !quickForm.student_id}
-                style={{ padding: '11px', background: sending ? '#a5b4fc' : '#4f46e5', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: sending ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                style={{ padding: '11px', background: sending ? '#a5b4fc' : '#4f46e5', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: sending ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 12 }}>
                 {sending ? '⏳ Sending…' : '📤 Send Notification'}
               </button>
             </div>
@@ -343,30 +328,16 @@ export default function NotificationsManager({
             {quickStudent && (
               <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
                 <p style={{ fontSize: 12, color: '#16a34a', margin: 0, fontWeight: 500 }}>
-                  📱 To: {quickStudent.parent_name} ({quickStudent.parent_phone})
+                  📱 To Portal: {quickStudent.parent_name}
                 </p>
               </div>
             )}
             <div style={{ background: '#f8fafc', borderRadius: 10, padding: '14px', border: '1px solid #e2e8f0', position: 'relative' }}>
-              <div style={{ background: '#25D366', borderRadius: 8, padding: '10px 14px', color: 'white', fontSize: 13, lineHeight: 1.6, maxWidth: '85%', marginLeft: 'auto' }}>
+              <div style={{ background: '#4f46e5', borderRadius: 8, padding: '10px 14px', color: 'white', fontSize: 13, lineHeight: 1.6, maxWidth: '85%', marginLeft: 'auto' }}>
                 {getPreview(quickForm.type, quickStudent)}
               </div>
               <p style={{ fontSize: 11, color: '#94a3b8', margin: '8px 0 0', textAlign: 'right' }}>
-                {quickForm.channel === 'whatsapp' ? '💬 WhatsApp' : quickForm.channel === 'sms' ? '📱 SMS' : '📲 Both'}
-              </p>
-            </div>
-            <div style={{ marginTop: 12, padding: '12px 14px', background: '#fffbeb', borderRadius: 8, border: '1px solid #fde68a' }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: '#d97706', margin: '0 0 6px' }}>
-                ⚠️ Parent must join sandbox first
-              </p>
-              <p style={{ fontSize: 12, color: '#92400e', margin: '0 0 6px', lineHeight: 1.6 }}>
-                Ask the parent to open WhatsApp and send this message to <strong>+1 415 523 8886</strong>:
-              </p>
-              <div style={{ background: '#25D366', borderRadius: 6, padding: '8px 12px', color: 'white', fontSize: 13, fontWeight: 700, fontFamily: 'monospace', marginBottom: 6 }}>
-                join &lt;your-sandbox-code&gt;
-              </div>
-              <p style={{ fontSize: 11, color: '#92400e', margin: 0 }}>
-                Find your exact code at: <strong>console.twilio.com → Messaging → Try it → WhatsApp</strong>
+                📲 Portal Notification
               </p>
             </div>
           </div>
@@ -434,23 +405,6 @@ export default function NotificationsManager({
                 </select>
               </div>
 
-              {/* Channel */}
-              <div>
-                <label style={lbl}>Send via</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {(['whatsapp', 'sms', 'both'] as const).map(ch => (
-                    <button key={ch} onClick={() => setBulkForm(f => ({ ...f, channel: ch }))}
-                      style={{
-                        flex: 1, padding: '8px', borderRadius: 8, cursor: 'pointer', border: `2px solid ${bulkForm.channel === ch ? '#4f46e5' : '#e2e8f0'}`,
-                        background: bulkForm.channel === ch ? '#eef2ff' : 'white', fontFamily: 'inherit',
-                        fontSize: 12, fontWeight: bulkForm.channel === ch ? 600 : 400, color: bulkForm.channel === ch ? '#4f46e5' : '#475569',
-                      }}>
-                      {ch === 'whatsapp' ? '💬' : ch === 'sms' ? '📱' : '📲'} {ch.charAt(0).toUpperCase() + ch.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Custom message override */}
               <div>
                 <label style={lbl}>Custom Message (optional — overrides template)</label>
@@ -461,7 +415,7 @@ export default function NotificationsManager({
               </div>
 
               <button onClick={handleBulkSend} disabled={bulkSending}
-                style={{ padding: '11px', background: bulkSending ? '#a5b4fc' : '#4f46e5', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: bulkSending ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                style={{ padding: '11px', background: bulkSending ? '#a5b4fc' : '#4f46e5', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: bulkSending ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 12 }}>
                 {bulkSending ? '⏳ Sending…' : '📢 Send Bulk Notification'}
               </button>
             </div>
@@ -473,7 +427,7 @@ export default function NotificationsManager({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
                 { label: 'Recipients',   value: bulkForm.target === 'absent' ? absentToday.length : bulkForm.target === 'pending_fees' ? pendingFeeStudents.length : bulkForm.target === 'all' ? students.length : students.filter(s => (!bulkForm.class_name || s.class_name === bulkForm.class_name) && (!bulkForm.section || s.section === bulkForm.section)).length },
-                { label: 'Channel',      value: bulkForm.channel === 'both' ? 'WhatsApp + SMS' : bulkForm.channel === 'whatsapp' ? 'WhatsApp' : 'SMS' },
+                { label: 'Channel',      value: 'Parent Portal' },
                 { label: 'Type',         value: TYPE_CFG[bulkForm.type]?.label ?? bulkForm.type },
               ].map(r => (
                 <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: '#f8fafc', borderRadius: 8 }}>
@@ -484,7 +438,7 @@ export default function NotificationsManager({
             </div>
             <div style={{ marginTop: 14, background: '#f8fafc', borderRadius: 10, padding: '12px 14px', border: '1px solid #e2e8f0' }}>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#64748b', margin: '0 0 6px', textTransform: 'uppercase' }}>Template preview</p>
-              <div style={{ background: '#25D366', borderRadius: 8, padding: '10px 14px', color: 'white', fontSize: 12, lineHeight: 1.6 }}>
+              <div style={{ background: '#4f46e5', borderRadius: 8, padding: '10px 14px', color: 'white', fontSize: 12, lineHeight: 1.6 }}>
                 {bulkForm.custom_message || (templates.find(t => t.type === bulkForm.type)?.message?.slice(0, 200) ?? 'Select a type to preview...')}
               </div>
             </div>
@@ -508,24 +462,9 @@ export default function NotificationsManager({
               </div>
               {customStudent && (
                 <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: '#0284c7' }}>
-                  📱 Parent: <strong>{customStudent.parent_name}</strong> · {customStudent.parent_phone}
+                  📱 To Portal: <strong>{customStudent.parent_name}</strong>
                 </div>
               )}
-              <div>
-                <label style={lbl}>Channel</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {(['whatsapp', 'sms', 'both'] as const).map(ch => (
-                    <button key={ch} onClick={() => setCustomForm(f => ({ ...f, channel: ch }))}
-                      style={{
-                        flex: 1, padding: '8px', borderRadius: 8, cursor: 'pointer', border: `2px solid ${customForm.channel === ch ? '#4f46e5' : '#e2e8f0'}`,
-                        background: customForm.channel === ch ? '#eef2ff' : 'white', fontFamily: 'inherit',
-                        fontSize: 12, fontWeight: customForm.channel === ch ? 600 : 400, color: customForm.channel === ch ? '#4f46e5' : '#475569',
-                      }}>
-                      {ch === 'whatsapp' ? '💬' : ch === 'sms' ? '📱' : '📲'} {ch.charAt(0).toUpperCase() + ch.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
               <div>
                 <label style={lbl}>Message *</label>
                 <textarea rows={5} style={{ ...inp, resize: 'none' } as React.CSSProperties}
@@ -545,7 +484,7 @@ export default function NotificationsManager({
             <h2 style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', margin: '0 0 1rem' }}>Live Preview</h2>
             <div style={{ background: '#f8fafc', borderRadius: 10, padding: '14px', border: '1px solid #e2e8f0', minHeight: 120 }}>
               {customForm.message
-                ? <div style={{ background: '#25D366', borderRadius: 8, padding: '10px 14px', color: 'white', fontSize: 13, lineHeight: 1.6, maxWidth: '85%', marginLeft: 'auto' }}>
+                ? <div style={{ background: '#4f46e5', borderRadius: 8, padding: '10px 14px', color: 'white', fontSize: 13, lineHeight: 1.6, maxWidth: '85%', marginLeft: 'auto' }}>
                     {customForm.message}
                   </div>
                 : <p style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', marginTop: 20 }}>Type a message to preview...</p>
@@ -598,8 +537,8 @@ export default function NotificationsManager({
                             {log.student?.full_name ?? '—'}
                             {log.student?.roll_number && <div style={{ fontSize: 11, color: '#94a3b8' }}>#{log.student.roll_number}</div>}
                           </td>
-                          <td style={{ padding: '11px 14px', color: '#475569', textTransform: 'capitalize' }}>
-                            {log.channel === 'whatsapp' ? '💬' : log.channel === 'sms' ? '📱' : '📲'} {log.channel}
+                          <td style={{ padding: '11px 14px', color: '#475569' }}>
+                            📲 Portal
                           </td>
                           <td style={{ padding: '11px 14px', color: '#475569', fontFamily: 'monospace', fontSize: 12 }}>{log.recipient}</td>
                           <td style={{ padding: '11px 14px', color: '#475569', maxWidth: 300 }}>

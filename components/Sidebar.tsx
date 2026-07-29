@@ -44,6 +44,7 @@ const TEACHER_NAV: NavItem[] = [
 
 const PARENT_NAV: NavItem[] = [
   { href: '/parent',              label: 'Dashboard',     icon: '◻' },
+  { href: '/parent/alerts',       label: 'Alerts',        icon: '📱' },
   { href: '/parent/report-cards', label: 'Report Cards',  icon: '📄' },
   { href: '/parent/attendance',   label: 'Attendance',    icon: '✅' },
   { href: '/parent/fees',         label: 'Fees',          icon: '💰' },

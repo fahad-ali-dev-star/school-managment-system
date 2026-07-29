@@ -12,6 +12,42 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get install -y postgresql-client
 
+      - name: Keep Supabase project alive (ping)
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          curl -s "${SUPABASE_URL}/rest/v1/students?select=count" \
+            -H "apikey: ${SUPABASE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_KEY}" \
+          && echo "Ping successful — project stays active"
+
+      - name: Validate Database URL
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          node -e '
+            const urlStr = process.env.DB_URL;
+            if (!urlStr) {
+              console.error("❌ DB_URL is empty");
+              process.exit(1);
+            }
+            // Check for unencoded special characters in the connection string
+            const doubleAt = (urlStr.match(/@/g) || []).length;
+            if (doubleAt > 1) {
+              console.error("❌ ERROR: Your DB_URL contains multiple @ symbols. This indicates your database password contains an unencoded @ character, which breaks URL parsing.");
+              console.error("Please URL-encode it (replace @ with %40).");
+              process.exit(1);
+            }
+            if (urlStr.includes("#") || urlStr.includes("?") || urlStr.includes(" ")) {
+              console.error("❌ ERROR: Your DB_URL contains unencoded special characters (#, ?, or spaces) which breaks URL parsing.");
+              console.error("Please URL-encode your password (replace # with %23, ? with %3F).");
+              process.exit(1);
+            }
+            console.log("✅ Connection string format looks clean.");
+          '
+
+
       - name: Create backup
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL }}
@@ -33,12 +69,3 @@ jobs:
           path: "*.sql.gz"
           retention-days: 30   # keeps last 30 days of backups, free
 
-      - name: Keep Supabase project alive (ping)
-        env:
-          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: |
-          curl -s "${SUPABASE_URL}/rest/v1/students?select=count" \
-            -H "apikey: ${SUPABASE_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_KEY}" \
-          && echo "Ping successful — project stays active"

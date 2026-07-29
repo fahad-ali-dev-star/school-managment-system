@@ -311,6 +311,37 @@ You are equipped with tools to perform real-time actions. If the administrator r
         if (call.name === 'sendNotification') {
           const { to, message: msgText, channel } = call.args as any
           actionResult = await sendNotification(to, msgText, channel)
+
+          try {
+            // Proactively log to notification_logs table so it shows up in parent portal!
+            const cleanedPhone = to.replace(/[\s\-\(\)]/g, '')
+            const suffix = cleanedPhone.slice(-10)
+            const phoneQuery = `%${suffix}`
+
+            const { data: student } = await supabase
+              .from('students')
+              .select('id')
+              .eq('school_id', schoolId)
+              .like('parent_phone', phoneQuery)
+              .limit(1)
+              .maybeSingle()
+
+            await supabase
+              .from('notification_logs')
+              .insert({
+                school_id:  schoolId,
+                student_id: student?.id ?? null,
+                type:       'ai_assistant',
+                channel:    channel ?? 'whatsapp',
+                recipient:  to,
+                message:    msgText,
+                status:     actionResult.success ? 'sent' : 'failed',
+                error_msg:  actionResult.error ?? null,
+                sent_at:    actionResult.success ? new Date().toISOString() : null,
+              })
+          } catch (logErr) {
+            console.error('Failed to log AI notification:', logErr)
+          }
         } else if (call.name === 'markAttendance') {
           const { studentId, date, status, notes } = call.args as any
           
