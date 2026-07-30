@@ -447,9 +447,10 @@ export default function StudentsList({
                     onChange={e => setForm(f => ({ ...f, parent_phone: e.target.value }))} />
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={lbl}>Parent Email</label>
-                  <input type="email" style={inp} value={form.parent_email} placeholder="optional"
+                  <label style={lbl}>Parent Email <span style={{ color: '#dc2626', fontWeight: 700 }}>⚠ Required for Parent Portal login &amp; notifications</span></label>
+                  <input type="email" style={inp} value={form.parent_email} placeholder="parent@email.com — must match parent portal login email"
                     onChange={e => setForm(f => ({ ...f, parent_email: e.target.value }))} />
+                  <p style={{ fontSize: 11, color: '#d97706', margin: '4px 0 0' }}>⚠ Without this, parents won't see notifications or be able to access the portal for this child.</p>
                 </div>
                 <div>
                   <label style={lbl}>Fee Status</label>

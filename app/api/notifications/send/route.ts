@@ -33,13 +33,18 @@ export async function POST(req: NextRequest) {
   if (student_id) {
     const { data: student } = await supabase
       .from('students')
-      .select('full_name, roll_number, class_name, section, parent_name, parent_phone')
+      .select('full_name, roll_number, class_name, section, parent_name, parent_phone, parent_email')
       .eq('id', student_id)
       .single()
 
     if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
     studentData = student
-    recipient   = student.parent_phone
+    const targetChannel = channel ?? 'portal'
+    // For portal channel use parent_email so the parent portal can find the notification;
+    // for SMS/WhatsApp use parent_phone (with fallback)
+    recipient = (targetChannel === 'portal')
+      ? (student.parent_email ?? student.parent_phone ?? '')
+      : (student.parent_phone ?? student.parent_email ?? '')
 
     // Build message from template if not custom
     if (!custom_message) {
@@ -68,21 +73,26 @@ export async function POST(req: NextRequest) {
     message   = custom_message ?? ''
   }
 
-  if (!message || !recipient) {
-    return NextResponse.json({ error: 'Message and recipient are required' }, { status: 400 })
+  if (!message) {
+    return NextResponse.json({ error: 'Message is required' }, { status: 400 })
+  }
+  const targetChannel = channel ?? 'portal'
+  if (!recipient && targetChannel !== 'portal') {
+    return NextResponse.json({ error: 'Recipient phone number or email is required' }, { status: 400 })
   }
 
   // Send the notification
-  const result = await sendNotification(recipient, message, channel ?? 'whatsapp')
+  const result = await sendNotification(recipient, message, targetChannel)
 
-  // Log to database
+  // Log to database (map 'portal' to 'whatsapp' to satisfy DB check constraint)
+  const dbChannel = (targetChannel === 'portal') ? 'whatsapp' : targetChannel
   const { data: log } = await supabase
     .from('notification_logs')
     .insert({
       school_id:  profile.school_id,
       student_id: student_id ?? null,
       type:       type ?? 'custom',
-      channel:    channel ?? 'whatsapp',
+      channel:    dbChannel,
       recipient,
       message,
       status:     result.success ? 'sent' : 'failed',

@@ -69,6 +69,17 @@ export default function ParentAlerts({
   const deliveredCount = filteredAlerts.filter(a => a.status === 'sent').length
   const failedCount = filteredAlerts.filter(a => a.status === 'failed').length
 
+  // Calculate time remaining before a notification expires (24h from created_at)
+  const getExpiresIn = (createdAt: string): string => {
+    const expiresAt = new Date(new Date(createdAt).getTime() + 24 * 60 * 60 * 1000)
+    const diffMs = expiresAt.getTime() - Date.now()
+    if (diffMs <= 0) return 'expiring soon'
+    const hrs = Math.floor(diffMs / (1000 * 60 * 60))
+    const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+    if (hrs > 0) return `expires in ${hrs}h ${mins}m`
+    return `expires in ${mins}m`
+  }
+
   const getAlertIcon = (type: string) => {
     const t = type.toLowerCase()
     if (t.includes('absence')) return '🎒'
@@ -88,17 +99,30 @@ export default function ParentAlerts({
 
   return (
     <div style={{ padding: '2rem' }}>
-      <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Alerts & Notifications</h1>
-          <p style={{ color: '#64748b', fontSize: 13, marginTop: 3 }}>Real-time SMS & WhatsApp updates delivered to your phone</p>
+          <p style={{ color: '#64748b', fontSize: 13, marginTop: 3 }}>School notifications delivered directly to your parent portal</p>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, background: '#f8fafc', padding: '6px 12px', borderRadius: 20, border: '1px solid #e2e8f0', color: '#475569' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
-            Twilio Gateway Active
+            Portal Notifications Active
           </div>
         </div>
+      </div>
+
+      {/* Retention info banner */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        background: '#f0fdf4', border: '1px solid #bbf7d0',
+        borderRadius: 10, padding: '10px 16px', marginBottom: '1.5rem',
+        fontSize: 13, color: '#166534',
+      }}>
+        <span style={{ fontSize: 18, flexShrink: 0 }}>📢</span>
+        <span>
+          <strong>Live Notifications:</strong> School alerts and notifications are delivered directly to your portal and stored for 30 days.
+        </span>
       </div>
 
       {children_.length === 0 ? (

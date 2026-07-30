@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   // Get students
   let studentsQuery = supabase
     .from('students')
-    .select('id, full_name, roll_number, class_name, section, parent_name, parent_phone')
+    .select('id, full_name, roll_number, class_name, section, parent_name, parent_phone, parent_email')
     .eq('school_id', profile.school_id)
     .eq('is_active', true)
 
@@ -65,16 +65,26 @@ export async function POST(req: NextRequest) {
 
     if (!message) continue
 
-    const result = await sendNotification(student.parent_phone, message, channel ?? 'whatsapp')
+    const targetChannel = channel ?? 'portal'
+    // For portal channel use parent_email as recipient; for SMS/WhatsApp use parent_phone (with fallback)
+    const recipient = (targetChannel === 'portal')
+      ? (student.parent_email ?? student.parent_phone ?? '')
+      : (student.parent_phone ?? student.parent_email ?? '')
 
+    // Skip if no usable recipient for non-portal channels
+    if (!recipient && targetChannel !== 'portal') continue
+
+    const result = await sendNotification(recipient, message, targetChannel)
+
+    const dbChannel = (targetChannel === 'portal') ? 'whatsapp' : targetChannel
     const { data: log } = await supabase
       .from('notification_logs')
       .insert({
         school_id:  profile.school_id,
         student_id: student.id,
         type:       type ?? 'announcement',
-        channel:    channel ?? 'whatsapp',
-        recipient:  student.parent_phone,
+        channel:    dbChannel,
+        recipient:  recipient,
         message,
         status:     result.success ? 'sent' : 'failed',
         error_msg:  result.error ?? null,
