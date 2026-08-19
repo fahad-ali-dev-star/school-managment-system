@@ -49,20 +49,25 @@ export async function ensureCurrentMonthFees(supabase: any, schoolId: string) {
 
     console.log(`[ensureCurrentMonthFees] No monthly fees found for ${monthLabel}. Generating...`)
 
-    // 3. Generate pending monthly fee records
-    const toInsert = students.map((s: any) => ({
-      student_id: s.id,
-      school_id: schoolId,
-      fee_type: 'monthly',
-      month: monthLabel,
-      amount: s.monthly_fee ?? 0,
-      status: 'pending',
-      due_date: dueDate,
-      paid_date: null,
-      payment_method: 'cash',
-      receipt_number: 'RCP-' + Date.now().toString(36).toUpperCase() + '-' + s.id.slice(0, 4).toUpperCase(),
-      notes: `Auto-generated for ${monthLabel}`,
-    }))
+    const todayStr = now.toISOString().split('T')[0]
+
+    // 3. Generate monthly fee records (students with 0 monthly_fee are automatically marked as 'paid')
+    const toInsert = students.map((s: any) => {
+      const isZeroFee = !s.monthly_fee || Number(s.monthly_fee) === 0
+      return {
+        student_id: s.id,
+        school_id: schoolId,
+        fee_type: 'monthly',
+        month: monthLabel,
+        amount: Number(s.monthly_fee ?? 0),
+        status: isZeroFee ? 'paid' : 'pending',
+        due_date: dueDate,
+        paid_date: isZeroFee ? todayStr : null,
+        payment_method: 'cash',
+        receipt_number: 'RCP-' + Date.now().toString(36).toUpperCase() + '-' + s.id.slice(0, 4).toUpperCase(),
+        notes: isZeroFee ? `No fee required (${monthLabel})` : `Auto-generated for ${monthLabel}`,
+      }
+    })
 
     const { error: insertError } = await supabase.from('fees').insert(toInsert)
     if (insertError) {
@@ -70,18 +75,18 @@ export async function ensureCurrentMonthFees(supabase: any, schoolId: string) {
       return
     }
 
-    // 4. Update all active students' fee_status to 'pending'
-    const { error: studentUpdateError } = await supabase
-      .from('students')
-      .update({ fee_status: 'pending' })
-      .eq('school_id', schoolId)
-      .eq('is_active', true)
+    // 4. Update student fee_status: 'pending' for students with fee > 0, 'paid' for students with 0 fee
+    const pendingStudentIds = students.filter((s: any) => Number(s.monthly_fee ?? 0) > 0).map((s: any) => s.id)
+    const paidStudentIds = students.filter((s: any) => Number(s.monthly_fee ?? 0) <= 0).map((s: any) => s.id)
 
-    if (studentUpdateError) {
-      console.error('[ensureCurrentMonthFees] Students status update error:', studentUpdateError.message)
-    } else {
-      console.log(`[ensureCurrentMonthFees] Generated ${toInsert.length} pending fees & updated student statuses for ${monthLabel}`)
+    if (pendingStudentIds.length > 0) {
+      await supabase.from('students').update({ fee_status: 'pending' }).in('id', pendingStudentIds)
     }
+    if (paidStudentIds.length > 0) {
+      await supabase.from('students').update({ fee_status: 'paid' }).in('id', paidStudentIds)
+    }
+
+    console.log(`[ensureCurrentMonthFees] Generated ${toInsert.length} fees & updated student statuses for ${monthLabel}`)
   } catch (err: any) {
     console.error('[ensureCurrentMonthFees] Fatal error:', err.message || err)
   }

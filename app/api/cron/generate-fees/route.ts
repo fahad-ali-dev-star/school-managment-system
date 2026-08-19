@@ -83,22 +83,27 @@ export async function GET(request: Request) {
 
       const alreadyHasFee = new Set((existingFees ?? []).map((f: any) => f.student_id))
 
+      const todayStr = now.toISOString().split('T')[0]
+
       // 5. Build insert batch — only for students without a fee this month
       const toInsert = students
         .filter((s: any) => !alreadyHasFee.has(s.id))
-        .map((s: any) => ({
-          student_id: s.id,
-          school_id: school.id,
-          fee_type: 'monthly',
-          month: monthLabel,
-          amount: s.monthly_fee ?? 0,
-          status: 'pending',
-          due_date: dueDate,
-          paid_date: null,
-          payment_method: 'cash',
-          receipt_number: 'RCP-' + Date.now().toString(36).toUpperCase() + '-' + s.id.slice(0, 4).toUpperCase(),
-          notes: `Auto-generated for ${monthLabel}`,
-        }))
+        .map((s: any) => {
+          const isZeroFee = !s.monthly_fee || Number(s.monthly_fee) === 0
+          return {
+            student_id: s.id,
+            school_id: school.id,
+            fee_type: 'monthly',
+            month: monthLabel,
+            amount: Number(s.monthly_fee ?? 0),
+            status: isZeroFee ? 'paid' : 'pending',
+            due_date: dueDate,
+            paid_date: isZeroFee ? todayStr : null,
+            payment_method: 'cash',
+            receipt_number: 'RCP-' + Date.now().toString(36).toUpperCase() + '-' + s.id.slice(0, 4).toUpperCase(),
+            notes: isZeroFee ? `No fee required (${monthLabel})` : `Auto-generated for ${monthLabel}`,
+          }
+        })
 
       totalFeesSkipped += students.length - toInsert.length
 
@@ -112,17 +117,15 @@ export async function GET(request: Request) {
         continue
       }
 
-      // 7. Update student fee_status to 'pending' for the newly generated ones
-      const studentIdsToUpdate = toInsert.map((f: any) => f.student_id)
-      if (studentIdsToUpdate.length > 0) {
-        const { error: studentUpdateError } = await supabase
-          .from('students')
-          .update({ fee_status: 'pending' })
-          .in('id', studentIdsToUpdate)
+      // 7. Update student fee_status
+      const pendingIds = toInsert.filter((f: any) => f.status === 'pending').map((f: any) => f.student_id)
+      const paidIds = toInsert.filter((f: any) => f.status === 'paid').map((f: any) => f.student_id)
 
-        if (studentUpdateError) {
-          errors.push(`School ${school.id} (student status update): ${studentUpdateError.message}`)
-        }
+      if (pendingIds.length > 0) {
+        await supabase.from('students').update({ fee_status: 'pending' }).in('id', pendingIds)
+      }
+      if (paidIds.length > 0) {
+        await supabase.from('students').update({ fee_status: 'paid' }).in('id', paidIds)
       }
 
       totalFeesCreated += toInsert.length

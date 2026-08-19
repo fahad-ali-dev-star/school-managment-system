@@ -32,5 +32,8 @@ export default async function FeesPage() {
     console.warn('FeesPage: Failed to fetch from Supabase (offline?):', err)
   }
 
-  return <FeesManager fees={fees} students={students} schoolId={profile.school_id} />
+  const now = new Date()
+  const currentMonthLabel = now.toLocaleString('default', { month: 'long' }) + ' ' + now.getFullYear()
+
+  return <FeesManager fees={fees} students={students} schoolId={profile.school_id} currentMonthLabel={currentMonthLabel} />
 }

@@ -25,7 +25,7 @@ function badge(status: string) {
   )
 }
 
-export default function FeesManager({ fees: init, students: initStudents, schoolId }: { fees: any[]; students: Student[]; schoolId: string }) {
+export default function FeesManager({ fees: init, students: initStudents, schoolId, currentMonthLabel }: { fees: any[]; students: Student[]; schoolId: string; currentMonthLabel: string }) {
   const [fees, setFees]         = useState(() => getMergedOfflineState('fees', init))
   const [students, setStudents] = useState(() => getMergedOfflineState('students', initStudents))
   const [showForm, setShowForm] = useState(false)
@@ -34,6 +34,8 @@ export default function FeesManager({ fees: init, students: initStudents, school
   const [filterStatus, setFilter] = useState('')
   const [search, setSearch]     = useState('')
   const [activeTab, setActiveTab] = useState<'fees' | 'students'>('fees')
+  // By default, fees tab shows only current month pending; toggle to show all
+  const [showAllFees, setShowAllFees] = useState(false)
   const now = new Date()
   const [form, setForm] = useState({
     student_id: '', amount: '', fee_type: 'monthly',
@@ -44,7 +46,12 @@ export default function FeesManager({ fees: init, students: initStudents, school
   })
   const supabase = createClient()
 
-  const filteredFees = fees.filter(f => {
+  // Current month pending fees (for the fees tab default view, ignoring 0 amount fees)
+  const currentMonthPendingFees = fees.filter(f =>
+    f.month === currentMonthLabel && f.status !== 'paid' && Number(f.amount) > 0
+  )
+
+  const filteredFees = (showAllFees ? fees : currentMonthPendingFees).filter(f => {
     const q = search.toLowerCase()
     return (!q || f.students?.full_name?.toLowerCase().includes(q) || f.students?.roll_number?.includes(q) || f.receipt_number?.includes(q))
       && (!filterStatus || f.status === filterStatus)
@@ -56,12 +63,17 @@ export default function FeesManager({ fees: init, students: initStudents, school
       && (!filterStatus || s.fee_status === filterStatus)
   })
 
-  const collected = fees.filter(f => f.status === 'paid').reduce((s, f) => s + Number(f.amount), 0)
-  const pending   = fees.filter(f => f.status !== 'paid').reduce((s, f) => s + Number(f.amount), 0)
+  const currentMonthFees = fees.filter(f => f.month === currentMonthLabel)
+  const collected = currentMonthFees.filter(f => f.status === 'paid').reduce((s, f) => s + Number(f.amount), 0)
+  const pending   = currentMonthFees.filter(f => f.status !== 'paid' && Number(f.amount) > 0).reduce((s, f) => s + Number(f.amount), 0)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setSaving(true)
-    
+    const amountVal = parseFloat(form.amount || '0')
+    const isZero = amountVal === 0
+    const finalStatus = isZero ? 'paid' : form.status
+    const finalPaidDate = finalStatus === 'paid' ? (form.paid_date || now.toISOString().split('T')[0]) : null
+
     if (isOffline()) {
       const feeId = editingFee ? editingFee.id : generateUUID()
       const receipt = editingFee ? editingFee.receipt_number : 'RCP-' + Date.now().toString(36).toUpperCase()
@@ -70,12 +82,12 @@ export default function FeesManager({ fees: init, students: initStudents, school
         id: feeId,
         school_id: schoolId,
         student_id: form.student_id,
-        amount: parseFloat(form.amount),
+        amount: amountVal,
         fee_type: form.fee_type,
         month: form.month,
         due_date: form.due_date,
-        paid_date: form.status === 'paid' ? form.paid_date : null,
-        status: form.status,
+        paid_date: finalPaidDate,
+        status: finalStatus,
         payment_method: form.payment_method,
         receipt_number: receipt,
         notes: form.notes || null,
@@ -90,12 +102,12 @@ export default function FeesManager({ fees: init, students: initStudents, school
           operation: 'update',
           payload: {
             student_id: form.student_id,
-            amount: parseFloat(form.amount),
+            amount: amountVal,
             fee_type: form.fee_type,
             month: form.month,
             due_date: form.due_date,
-            paid_date: form.status === 'paid' ? form.paid_date : null,
-            status: form.status,
+            paid_date: finalPaidDate,
+            status: finalStatus,
             payment_method: form.payment_method,
             notes: form.notes || null,
           },
@@ -112,12 +124,12 @@ export default function FeesManager({ fees: init, students: initStudents, school
             id: feeId,
             school_id: schoolId,
             student_id: form.student_id,
-            amount: parseFloat(form.amount),
+            amount: amountVal,
             fee_type: form.fee_type,
             month: form.month,
             due_date: form.due_date,
-            paid_date: form.status === 'paid' ? form.paid_date : null,
-            status: form.status,
+            paid_date: finalPaidDate,
+            status: finalStatus,
             payment_method: form.payment_method,
             receipt_number: receipt,
             notes: form.notes || null,
@@ -130,11 +142,11 @@ export default function FeesManager({ fees: init, students: initStudents, school
         type: 'supabase',
         target: 'students',
         operation: 'update',
-        payload: { fee_status: form.status },
+        payload: { fee_status: finalStatus },
         matchKey: 'id',
         matchValue: form.student_id
       })
-      setStudents(p => p.map(s => s.id === form.student_id ? { ...s, fee_status: form.status } : s))
+      setStudents(p => p.map(s => s.id === form.student_id ? { ...s, fee_status: finalStatus } : s))
 
       alert('Fee details saved locally. Changes will sync automatically when you are back online.')
       setSaving(false); setShowForm(false); setEditingFee(null)
@@ -143,29 +155,29 @@ export default function FeesManager({ fees: init, students: initStudents, school
 
     if (editingFee) {
       const { data, error } = await supabase.from('fees').update({
-        ...form, amount: parseFloat(form.amount),
-        paid_date: form.status === 'paid' ? form.paid_date : null,
+        ...form, amount: amountVal, status: finalStatus,
+        paid_date: finalPaidDate,
       }).eq('id', editingFee.id).select('*, students(full_name, roll_number, class_name)').single()
       
       if (!error && data) {
         setFees(p => p.map(f => f.id === data.id ? data : f))
         // Always sync student fee_status with the fee status
-        await supabase.from('students').update({ fee_status: form.status }).eq('id', form.student_id)
-        setStudents(p => p.map(s => s.id === form.student_id ? { ...s, fee_status: form.status } : s))
+        await supabase.from('students').update({ fee_status: finalStatus }).eq('id', form.student_id)
+        setStudents(p => p.map(s => s.id === form.student_id ? { ...s, fee_status: finalStatus } : s))
       }
     } else {
       const receipt = 'RCP-' + Date.now().toString(36).toUpperCase()
       const { data, error } = await supabase.from('fees').insert({
-        ...form, school_id: schoolId, amount: parseFloat(form.amount),
+        ...form, school_id: schoolId, amount: amountVal, status: finalStatus,
         receipt_number: receipt,
-        paid_date: form.status === 'paid' ? form.paid_date : null,
+        paid_date: finalPaidDate,
       }).select('*, students(full_name, roll_number, class_name)').single()
       
       if (!error && data) {
         setFees(p => [data, ...p])
         // Always sync student fee_status with the fee status
-        await supabase.from('students').update({ fee_status: form.status }).eq('id', form.student_id)
-        setStudents(p => p.map(s => s.id === form.student_id ? { ...s, fee_status: form.status } : s))
+        await supabase.from('students').update({ fee_status: finalStatus }).eq('id', form.student_id)
+        setStudents(p => p.map(s => s.id === form.student_id ? { ...s, fee_status: finalStatus } : s))
       }
     }
     setSaving(false); setShowForm(false); setEditingFee(null)
@@ -243,7 +255,9 @@ export default function FeesManager({ fees: init, students: initStudents, school
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>Fee Collection</h1>
-          <p style={{ color: '#64748b', fontSize: 13, marginTop: 2 }}>{fees.length} records</p>
+          <p style={{ color: '#64748b', fontSize: 13, marginTop: 2 }}>
+            {currentMonthLabel} · {fees.length} total records
+          </p>
         </div>
         <button onClick={openAdd} style={{
           padding: '9px 18px', background: '#4f46e5', color: 'white',
@@ -274,12 +288,12 @@ export default function FeesManager({ fees: init, students: initStudents, school
         ))}
       </div>
 
-      {/* Summary */}
+      {/* Summary — current month only */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         {[
-          { label: 'Collected', value: `Rs ${collected.toLocaleString()}`, color: '#16a34a', bg: '#f0fdf4' },
-          { label: 'Pending',   value: `Rs ${pending.toLocaleString()}`,   color: '#d97706', bg: '#fffbeb' },
-          { label: 'Total Records', value: fees.length,                    color: '#4f46e5', bg: '#eef2ff' },
+          { label: `${currentMonthLabel} — Collected`, value: `Rs ${collected.toLocaleString()}`, color: '#16a34a', bg: '#f0fdf4' },
+          { label: `${currentMonthLabel} — Pending`,   value: `Rs ${pending.toLocaleString()}`,   color: '#d97706', bg: '#fffbeb' },
+          { label: 'Total Records (All)', value: fees.length,                    color: '#4f46e5', bg: '#eef2ff' },
         ].map((s, i) => (
           <div key={i} className="card" style={{ padding: '1.25rem' }}>
             <p style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{s.label}</p>
@@ -289,15 +303,58 @@ export default function FeesManager({ fees: init, students: initStudents, school
       </div>
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: '1.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <input placeholder="Search student, receipt…" value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, width: 260 }} />
-        <select value={filterStatus} onChange={e => setFilter(e.target.value)} style={{ ...inp, width: 'auto' }}>
-          <option value="">All statuses</option>
-          <option value="paid">Paid</option>
-          <option value="pending">Pending</option>
-          <option value="overdue">Overdue</option>
-        </select>
+        {activeTab === 'fees' && !showAllFees && (
+          <select value={filterStatus} onChange={e => setFilter(e.target.value)} style={{ ...inp, width: 'auto' }}>
+            <option value="">All pending statuses</option>
+            <option value="pending">Pending</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        )}
+        {activeTab === 'fees' && showAllFees && (
+          <select value={filterStatus} onChange={e => setFilter(e.target.value)} style={{ ...inp, width: 'auto' }}>
+            <option value="">All statuses</option>
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        )}
+        {activeTab !== 'fees' && (
+          <select value={filterStatus} onChange={e => setFilter(e.target.value)} style={{ ...inp, width: 'auto' }}>
+            <option value="">All statuses</option>
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        )}
       </div>
+
+      {/* Current month pending banner (fees tab) */}
+      {activeTab === 'fees' && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: showAllFees ? '#f8fafc' : '#fffbeb',
+          border: `1px solid ${showAllFees ? '#e2e8f0' : '#fde68a'}`,
+          borderRadius: 8, padding: '10px 16px', marginBottom: '1rem', flexWrap: 'wrap', gap: 8,
+        }}>
+          <span style={{ fontSize: 13, color: showAllFees ? '#64748b' : '#92400e', fontWeight: 500 }}>
+            {showAllFees
+              ? `📋 Showing all ${fees.length} records across all months`
+              : `⏳ Showing ${currentMonthPendingFees.length} unpaid fees for ${currentMonthLabel} · Previous months' history is in Analytics`}
+          </span>
+          <button
+            onClick={() => { setShowAllFees(v => !v); setFilter('') }}
+            style={{
+              padding: '5px 14px', border: '1px solid #e2e8f0', borderRadius: 6,
+              background: 'white', color: '#4f46e5', fontSize: 12, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+            }}
+          >
+            {showAllFees ? '⏳ Show Current Month Pending' : '📋 Show All Records'}
+          </button>
+        </div>
+      )}
 
       {/* Table */}
       <div className="card" style={{ overflow: 'hidden' }}>
@@ -456,7 +513,7 @@ export default function FeesManager({ fees: init, students: initStudents, school
                   </div>
                   <div>
                     <label style={lbl}>Amount (Rs) *</label>
-                    <input required type="number" min="1" style={inp} value={form.amount} placeholder="3500"
+                    <input required type="number" min="0" style={inp} value={form.amount} placeholder="3500"
                       onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} />
                   </div>
                 </div>

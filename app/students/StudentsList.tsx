@@ -85,14 +85,15 @@ export default function StudentsList({
   async function handleSave(e: React.FormEvent) {
     e.preventDefault(); setSaving(true); setError('')
     try {
+      const monthlyFeeVal = form.monthly_fee ? parseFloat(form.monthly_fee) : 0
       const payload: any = {
         full_name: form.full_name, roll_number: form.roll_number,
         class_name: form.class_name, section: form.section, gender: form.gender,
         date_of_birth: form.date_of_birth || null,
         parent_name: form.parent_name, parent_phone: form.parent_phone,
         parent_email: form.parent_email || null, class_id: form.class_id || null,
-        fee_status: form.fee_status,
-        monthly_fee: form.monthly_fee ? parseFloat(form.monthly_fee) : null,
+        fee_status: monthlyFeeVal === 0 ? 'paid' : form.fee_status,
+        monthly_fee: monthlyFeeVal,
       }
 
       if (isOffline()) {

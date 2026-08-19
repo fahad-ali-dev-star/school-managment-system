@@ -54,15 +54,17 @@ export default async function AnalyticsPage() {
     console.warn('AnalyticsPage: Failed to fetch from Supabase (offline?):', err)
   }
 
-  const totalCollected = allFees.filter(f => f.status === 'paid').reduce((s, f) => s + Number(f.amount), 0)
-  const totalPending   = allFees.filter(f => f.status !== 'paid').reduce((s, f) => s + Number(f.amount), 0)
-  const totalPresent   = allAttendance.filter(a => a.status === 'present').length
+  const now = new Date()
+  const currentMonthLabel = now.toLocaleString('default', { month: 'long' }) + ' ' + now.getFullYear()
+
+  const totalCollected   = allFees.filter(f => f.status === 'paid').reduce((s, f) => s + Number(f.amount), 0)
+  // Previous months pending (shown in analytics) — current month pending is shown in fees page
+  const prevMonthPending = allFees.filter(f => f.status !== 'paid' && f.month && f.month !== currentMonthLabel).reduce((s, f) => s + Number(f.amount), 0)
+  const totalPresent     = allAttendance.filter(a => a.status === 'present').length
   const totalAtt       = allAttendance.length
   const attRate        = totalAtt > 0 ? Math.round((totalPresent / totalAtt) * 100) : 0
 
   // Fee by month (dynamic based on available fee records)
-  const now = new Date()
-  const currentMonthLabel = now.toLocaleString('default', { month: 'long' }) + ' ' + now.getFullYear()
 
   const monthLabelsSet = new Set<string>()
   allFees.forEach(f => {
@@ -132,7 +134,7 @@ export default async function AnalyticsPage() {
       totalStudents,
       totalTeachers,
       totalClasses,
-      totalCollected, totalPending, attRate,
+      totalCollected, totalPending: prevMonthPending, attRate,
       totalLeaves:  allLeaves.length,
       totalNotifs:  allNotifs.length,
     },
@@ -140,9 +142,9 @@ export default async function AnalyticsPage() {
     attendanceChartData: last14.map(d => attByDate[d]),
     gradeChartData:      Object.entries(gradeCounts).map(([grade, count]) => ({ grade, count })),
     feeStatusPie: [
-      { name: 'Paid',    value: allFees.filter(f => f.status === 'paid').length,    color: '#16a34a' },
-      { name: 'Pending', value: allFees.filter(f => f.status === 'pending').length, color: '#d97706' },
-      { name: 'Overdue', value: allFees.filter(f => f.status === 'overdue').length, color: '#dc2626' },
+      { name: 'Paid (All)',          value: allFees.filter(f => f.status === 'paid').length,                                                     color: '#16a34a' },
+      { name: 'Prev Months Pending', value: allFees.filter(f => f.status === 'pending' && f.month && f.month !== currentMonthLabel).length,      color: '#d97706' },
+      { name: 'Overdue',             value: allFees.filter(f => f.status === 'overdue' && f.month && f.month !== currentMonthLabel).length,      color: '#dc2626' },
     ],
     leaveChartData: [
       { name: 'Approved',  value: allLeaves.filter(l => l.status === 'approved').length,  color: '#16a34a' },
