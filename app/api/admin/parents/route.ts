@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
+import { ensureParentAccount } from '@/lib/parentService'
 
 async function assertAdmin() {
   const supabase = createClient()
@@ -36,28 +37,15 @@ export async function POST(req: NextRequest) {
   if (!email || !full_name)
     return NextResponse.json({ error: 'email and full_name are required' }, { status: 400 })
 
-  const admin = createAdminClient()
-
-  const { data: authData, error: authErr } = await admin.auth.admin.createUser({
-    email: email.trim().toLowerCase(),
-    password: 'parent1122',
-    email_confirm: true,
+  const res = await ensureParentAccount({
+    schoolId: ctx.profile.school_id,
+    email,
+    fullName: full_name,
   })
-  if (authErr) return NextResponse.json({ error: authErr.message }, { status: 400 })
 
-  const uid = authData.user.id
-
-  const { error: userErr } = await admin.from('users').insert({
-    id: uid,
-    school_id: ctx.profile.school_id,
-    full_name,
-    email: email.trim().toLowerCase(),
-    role: 'parent',
-  })
-  if (userErr) {
-    await admin.auth.admin.deleteUser(uid)
-    return NextResponse.json({ error: userErr.message }, { status: 400 })
+  if (!res) {
+    return NextResponse.json({ error: 'Failed to create parent account' }, { status: 400 })
   }
 
-  return NextResponse.json({ id: uid, email, full_name }, { status: 201 })
+  return NextResponse.json(res, { status: 201 })
 }

@@ -83,5 +83,19 @@ export async function POST(req: NextRequest) {
     .select().single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+
+  if (body.parent_email && body.parent_email.trim() && body.parent_name && body.parent_name.trim()) {
+    try {
+      const { ensureParentAccount } = await import('@/lib/parentService')
+      await ensureParentAccount({
+        schoolId: profile.school_id,
+        email: body.parent_email,
+        fullName: body.parent_name,
+      })
+    } catch (e) {
+      console.error('Failed to auto create parent account:', e)
+    }
+  }
+
   return NextResponse.json(data, { status: 201 })
 }

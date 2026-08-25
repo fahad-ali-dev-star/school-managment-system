@@ -179,6 +179,21 @@ export default function StudentsList({
           setStudents(p => [...p, studentRecord])
         }
 
+        if (payload.parent_email && payload.parent_email.trim() && payload.parent_name && payload.parent_name.trim()) {
+          queueOfflineMutation({
+            type: 'supabase',
+            target: 'users',
+            operation: 'insert',
+            payload: {
+              id: generateUUID(),
+              school_id: schoolId,
+              full_name: payload.parent_name.trim(),
+              email: payload.parent_email.trim().toLowerCase(),
+              role: 'parent'
+            }
+          })
+        }
+
         alert('Saved locally. Your changes will sync automatically when you are back online.')
         setShowForm(false)
         setSaving(false)
@@ -256,6 +271,23 @@ export default function StudentsList({
           })
         }
       }
+
+      // Auto-generate parent account on Parent page if parent_email and parent_name are provided
+      if (payload.parent_email && payload.parent_email.trim() && payload.parent_name && payload.parent_name.trim()) {
+        try {
+          await fetch('/api/admin/parents', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: payload.parent_email.trim(),
+              full_name: payload.parent_name.trim(),
+            }),
+          })
+        } catch (err) {
+          console.error('Failed to auto create parent account:', err)
+        }
+      }
+
       setShowForm(false)
     } catch { setError('Network error. Try again.') }
     setSaving(false)
@@ -448,10 +480,12 @@ export default function StudentsList({
                     onChange={e => setForm(f => ({ ...f, parent_phone: e.target.value }))} />
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={lbl}>Parent Email <span style={{ color: '#dc2626', fontWeight: 700 }}>⚠ Required for Parent Portal login &amp; notifications</span></label>
-                  <input type="email" style={inp} value={form.parent_email} placeholder="parent@email.com — must match parent portal login email"
+                  <label style={lbl}>Parent Gmail / Email <span style={{ color: '#4f46e5', fontWeight: 600 }}>(Auto-generates Parent Account if added)</span></label>
+                  <input type="email" style={inp} value={form.parent_email} placeholder="parent@gmail.com"
                     onChange={e => setForm(f => ({ ...f, parent_email: e.target.value }))} />
-                  <p style={{ fontSize: 11, color: '#d97706', margin: '4px 0 0' }}>⚠ Without this, parents won't see notifications or be able to access the portal for this child.</p>
+                  <p style={{ fontSize: 11, color: '#4f46e5', margin: '4px 0 0' }}>
+                    💡 Adding parent Gmail auto-generates parent account with parent name on the Parent page. If left empty, no parent account will be generated.
+                  </p>
                 </div>
                 <div>
                   <label style={lbl}>Fee Status</label>
