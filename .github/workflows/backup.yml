@@ -65,7 +65,7 @@ jobs:
           BACKUP_FILE="backup_${TIMESTAMP}.sql"
           
           echo "Creating PostgreSQL backup using pg_dump..."
-          pg_dump -d "$CLEAN_DB_URL" \
+          pg_dump -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" \
             --no-owner \
             --no-acl \
             --clean \
