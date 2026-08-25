@@ -12,7 +12,10 @@ const getGenAI = () => {
   return new GoogleGenerativeAI(apiKey)
 }
 
-// Gemini Tools declarations for actions the AI can perform
+// ==========================================
+// GEMINI TOOL DECLARATIONS FOR AI AGENT
+// ==========================================
+
 const sendNotificationTool = {
   name: 'sendNotification',
   description: 'Send an SMS or WhatsApp notification to a parent or phone number.',
@@ -34,8 +37,8 @@ const markAttendanceTool = {
     type: SchemaType.OBJECT,
     properties: {
       studentId: { type: SchemaType.STRING, description: 'The UUID of the student' },
-      date: { type: SchemaType.STRING, description: 'The date for attendance in YYYY-MM-DD format (e.g., "2026-06-29")' },
-      status: { type: SchemaType.STRING, description: 'The attendance status: "present", "absent", or "late"' },
+      date: { type: SchemaType.STRING, description: 'The date for attendance in YYYY-MM-DD format' },
+      status: { type: SchemaType.STRING, description: 'The attendance status: "present", "absent", "late", or "leave"' },
       notes: { type: SchemaType.STRING, description: 'Optional comments or notes about the attendance' }
     },
     required: ['studentId', 'date', 'status']
@@ -44,17 +47,46 @@ const markAttendanceTool = {
 
 const createFeeRecordTool = {
   name: 'createFeeRecord',
-  description: 'Create a new pending fee invoice for a student.',
+  description: 'Create a new pending fee invoice for a single student.',
   parameters: {
     type: SchemaType.OBJECT,
     properties: {
       studentId: { type: SchemaType.STRING, description: 'The UUID of the student' },
       amount: { type: SchemaType.NUMBER, description: 'The fee amount in PKR' },
-      feeType: { type: SchemaType.STRING, description: 'The description of the fee type (e.g. "Monthly Tuition", "Admission Fee")' },
-      month: { type: SchemaType.STRING, description: 'The billing month (e.g. "June 2026", "July 2026")' },
+      feeType: { type: SchemaType.STRING, description: 'The description/type of fee (e.g. "Monthly Tuition", "Admission Fee", "Exam Fee")' },
+      month: { type: SchemaType.STRING, description: 'The billing month (e.g. "July 2026")' },
       dueDate: { type: SchemaType.STRING, description: 'The payment due date in YYYY-MM-DD format' }
     },
     required: ['studentId', 'amount', 'feeType', 'month', 'dueDate']
+  } as any
+}
+
+const recordFeePaymentTool = {
+  name: 'recordFeePayment',
+  description: 'Mark an existing pending/overdue fee record as paid.',
+  parameters: {
+    type: SchemaType.OBJECT,
+    properties: {
+      feeId: { type: SchemaType.STRING, description: 'The UUID of the fee record' },
+      paymentMethod: { type: SchemaType.STRING, description: 'Method of payment: "cash", "bank", "jazzcash", or "easypaisa"' },
+      paidDate: { type: SchemaType.STRING, description: 'Date of payment in YYYY-MM-DD format (defaults to today)' },
+      notes: { type: SchemaType.STRING, description: 'Optional payment notes or receipt number' }
+    },
+    required: ['feeId', 'paymentMethod']
+  } as any
+}
+
+const generateMonthlyFeesTool = {
+  name: 'generateMonthlyFees',
+  description: 'Bulk generate pending monthly fee slips for all active students in a class or the entire school.',
+  parameters: {
+    type: SchemaType.OBJECT,
+    properties: {
+      month: { type: SchemaType.STRING, description: 'Billing month name (e.g. "July 2026")' },
+      dueDate: { type: SchemaType.STRING, description: 'Payment due date in YYYY-MM-DD format' },
+      className: { type: SchemaType.STRING, description: 'Optional class name filter (e.g. "Class 10"). Omit to generate for all students.' }
+    },
+    required: ['month', 'dueDate']
   } as any
 }
 
@@ -71,6 +103,73 @@ const updateLeaveStatusTool = {
   } as any
 }
 
+const addStudentTool = {
+  name: 'addStudent',
+  description: 'Register a new student into the school database.',
+  parameters: {
+    type: SchemaType.OBJECT,
+    properties: {
+      fullName: { type: SchemaType.STRING, description: 'Full name of the student' },
+      className: { type: SchemaType.STRING, description: 'Class name (e.g. "Class 5", "Grade 10")' },
+      section: { type: SchemaType.STRING, description: 'Section name (e.g. "A", "B")' },
+      rollNumber: { type: SchemaType.STRING, description: 'Roll number of the student' },
+      parentName: { type: SchemaType.STRING, description: 'Full name of parent/guardian' },
+      parentPhone: { type: SchemaType.STRING, description: 'Parent phone number' },
+      parentEmail: { type: SchemaType.STRING, description: 'Optional parent email address' },
+      monthlyFee: { type: SchemaType.NUMBER, description: 'Monthly fee amount in PKR (e.g. 5000)' }
+    },
+    required: ['fullName', 'className', 'section', 'rollNumber', 'parentName', 'parentPhone']
+  } as any
+}
+
+const addTeacherTool = {
+  name: 'addTeacher',
+  description: 'Register a new teacher profile in the school directory.',
+  parameters: {
+    type: SchemaType.OBJECT,
+    properties: {
+      fullName: { type: SchemaType.STRING, description: 'Full name of the teacher' },
+      email: { type: SchemaType.STRING, description: 'Teacher email address' },
+      phone: { type: SchemaType.STRING, description: 'Teacher phone number' },
+      subject: { type: SchemaType.STRING, description: 'Main subject taught (e.g. "Mathematics", "Science")' },
+      classAssigned: { type: SchemaType.STRING, description: 'Assigned class/section (e.g. "Class 10-A")' },
+      salary: { type: SchemaType.NUMBER, description: 'Monthly salary amount in PKR' }
+    },
+    required: ['fullName', 'email', 'subject']
+  } as any
+}
+
+const createExamTool = {
+  name: 'createExam',
+  description: 'Create and schedule a new exam for a class.',
+  parameters: {
+    type: SchemaType.OBJECT,
+    properties: {
+      examName: { type: SchemaType.STRING, description: 'Name of the exam (e.g. "Mid-Term Examination 2026")' },
+      className: { type: SchemaType.STRING, description: 'Class name (e.g. "Class 10")' },
+      section: { type: SchemaType.STRING, description: 'Section name (e.g. "A")' },
+      examDate: { type: SchemaType.STRING, description: 'Start date of exam in YYYY-MM-DD format' }
+    },
+    required: ['examName', 'className', 'examDate']
+  } as any
+}
+
+const addHolidayTool = {
+  name: 'addHoliday',
+  description: 'Add a new holiday or school event to the calendar.',
+  parameters: {
+    type: SchemaType.OBJECT,
+    properties: {
+      title: { type: SchemaType.STRING, description: 'Title of the holiday/event (e.g. "Independence Day", "Summer Vacation")' },
+      date: { type: SchemaType.STRING, description: 'Start date in YYYY-MM-DD format' },
+      endDate: { type: SchemaType.STRING, description: 'Optional end date for multi-day breaks in YYYY-MM-DD format' },
+      type: { type: SchemaType.STRING, description: 'Type: "national", "school", "exam_break", "summer", or "winter"' },
+      description: { type: SchemaType.STRING, description: 'Optional details or note' }
+    },
+    required: ['title', 'date', 'type']
+  } as any
+}
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = createClient()
@@ -81,7 +180,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get profile — same pattern as other routes (uses 'users' table, not 'profiles')
+    // Get profile — uses 'users' table
     const { data: profile } = await supabase
       .from('users')
       .select(`
@@ -100,7 +199,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 401 })
     }
 
-    // Only admin/principal can use the chatbot
+    // Only admin/principal can use the AI Agent
     if (!['admin', 'principal'].includes(profile.role)) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
@@ -110,12 +209,13 @@ export async function POST(req: NextRequest) {
     const schoolName = schoolData?.name ?? 'School'
     const plan = schoolData?.plan ?? 'free'
 
-    // Check pro plan
+    // Check Pro plan requirement
     if (plan === 'free') {
-      return NextResponse.json({ error: 'AI features require Pro plan' }, { status: 403 })
+      return NextResponse.json({ error: 'AI Agent features require Pro plan subscription.' }, { status: 403 })
     }
 
-    const { message } = await req.json()
+    const body = await req.json()
+    const { message, confirmAction } = body
 
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
@@ -135,7 +235,7 @@ export async function POST(req: NextRequest) {
     const today = new Date().toISOString().split('T')[0]
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
-    // Fetch school data in parallel
+    // Fetch school data in parallel to build context
     const [
       studentsRes,
       feesRes,
@@ -144,11 +244,12 @@ export async function POST(req: NextRequest) {
       examsRes,
       marksRes,
       leavesRes,
-      subjectsRes
+      subjectsRes,
+      holidaysRes
     ] = await Promise.all([
       supabase
         .from('students')
-        .select('id, full_name, roll_number, class_name, section, fee_status, is_active, parent_name, parent_phone, monthly_fee')
+        .select('id, full_name, roll_number, class_name, section, fee_status, is_active, parent_name, parent_phone, parent_email, monthly_fee')
         .eq('school_id', schoolId)
         .eq('is_active', true),
 
@@ -157,7 +258,7 @@ export async function POST(req: NextRequest) {
         .select('id, student_id, amount, fee_type, month, due_date, paid_date, status, payment_method')
         .eq('school_id', schoolId)
         .order('created_at', { ascending: false })
-        .limit(200),
+        .limit(250),
 
       supabase
         .from('attendance')
@@ -168,7 +269,7 @@ export async function POST(req: NextRequest) {
 
       supabase
         .from('teachers')
-        .select('id, full_name, email, subject, class_assigned, is_active, salary')
+        .select('id, full_name, email, phone, subject, class_assigned, is_active, salary')
         .eq('school_id', schoolId)
         .eq('is_active', true),
 
@@ -194,7 +295,13 @@ export async function POST(req: NextRequest) {
       supabase
         .from('subjects')
         .select('id, exam_id, name, total_marks, passing_marks')
+        .eq('school_id', schoolId),
+
+      supabase
+        .from('holidays')
+        .select('id, title, date, end_date, type, description')
         .eq('school_id', schoolId)
+        .limit(50)
     ])
 
     const students = studentsRes.data ?? []
@@ -205,8 +312,9 @@ export async function POST(req: NextRequest) {
     const marks = marksRes.data ?? []
     const leaves = leavesRes.data ?? []
     const subjects = subjectsRes.data ?? []
+    const holidays = holidaysRes.data ?? []
 
-    // Compute summary stats for the system prompt
+    // Compute summary stats
     const todayAttendance = attendance.filter(a => a.date === today)
     const presentToday = todayAttendance.filter(a => a.status === 'present').length
     const absentToday = todayAttendance.filter(a => a.status === 'absent').length
@@ -221,63 +329,61 @@ export async function POST(req: NextRequest) {
       .reduce((sum, f) => sum + (f.amount || 0), 0)
 
     const pendingLeaves = leaves.filter(l => l.status === 'pending').length
-    const approvedLeaves = leaves.filter(l => l.status === 'approved').length
 
-    // Build system prompt with school context
+    // System prompt with full context and instructions
     const systemPrompt = `
-You are an intelligent AI assistant for ${schoolName}, a school management system.
+You are the Autonomous AI Agent & Operations Controller for ${schoolName}.
 Today's date: ${today}
-Language instruction: Detect the language of the user's question and reply in the SAME language.
-If the user writes in Urdu (اردو), reply fully in Urdu. If in English, reply in English.
 
-=== SCHOOL SUMMARY ===
-School: ${schoolName}
-Total active students: ${students.length}
-Total active teachers: ${teachers.length}
+=== LANGUAGE & MULTILINGUAL INSTRUCTION ===
+Detect the language of the user's message. Reply in the EXACT SAME language.
+- If Urdu (اردو), reply fully in proper Urdu script (نستعلیق/اردو رسم الخط). Do NOT use Roman Urdu unless explicitly requested.
+- If English, reply in clear professional English.
+
+=== SCHOOL LIVE SUMMARY ===
+School Name: ${schoolName}
+Total Active Students: ${students.length}
+Total Active Teachers: ${teachers.length}
 
 === TODAY'S ATTENDANCE (${today}) ===
-Present: ${presentToday}
-Absent: ${absentToday}
-Late: ${lateToday}
-Total marked: ${todayAttendance.length}
-Attendance rate: ${students.length > 0 ? Math.round((presentToday / students.length) * 100) : 0}%
+Present: ${presentToday} | Absent: ${absentToday} | Late: ${lateToday}
+Attendance Rate: ${students.length > 0 ? Math.round((presentToday / students.length) * 100) : 0}%
 
-=== FEE STATUS ===
-Students with pending fees: ${pendingFees.length}
-Total pending amount: PKR ${totalPendingAmount.toLocaleString()}
-Students with overdue fees: ${overdueFees.length}
-Total overdue amount: PKR ${totalOverdueAmount.toLocaleString()}
-Total collected this month: PKR ${totalCollectedThisMonth.toLocaleString()}
+=== FINANCIAL & FEES ===
+Pending Fee Records: ${pendingFees.length} (Total: PKR ${totalPendingAmount.toLocaleString()})
+Overdue Fee Records: ${overdueFees.length} (Total: PKR ${totalOverdueAmount.toLocaleString()})
+Collected This Month: PKR ${totalCollectedThisMonth.toLocaleString()}
 
-=== LEAVE APPLICATIONS ===
-Pending leaves: ${pendingLeaves}
-Approved leaves: ${approvedLeaves}
+=== LEAVES & HOLIDAYS ===
+Pending Leaves: ${pendingLeaves}
+Total Scheduled Holidays: ${holidays.length}
 
-=== FULL DATA (use for specific lookups) ===
+=== LIVE DATABASE CONTEXT ===
 STUDENTS: ${JSON.stringify(students.slice(0, 150))}
-FEES (recent 200): ${JSON.stringify(fees)}
-LAST 7 DAYS ATTENDANCE: ${JSON.stringify(attendance.slice(0, 300))}
+FEES (recent 250): ${JSON.stringify(fees)}
+LAST 7 DAYS ATTENDANCE: ${JSON.stringify(attendance.slice(0, 250))}
 TEACHERS: ${JSON.stringify(teachers)}
 EXAMS: ${JSON.stringify(exams)}
-EXAM SUBJECTS: ${JSON.stringify(subjects)}
-MARKS (recent 300): ${JSON.stringify(marks)}
-LEAVES (recent 100): ${JSON.stringify(leaves)}
+UPCOMING HOLIDAYS: ${JSON.stringify(holidays)}
 
-=== ACTIONS / CAPABILITIES ===
-You are equipped with tools to perform real-time actions. If the administrator requests you to do any of the following, call the appropriate tool instead of just answering with text:
-1. Send an SMS or WhatsApp notification to parents/others.
-2. Mark attendance (present/absent/late) for any student.
-3. Create a pending fee invoice for a student.
-4. Approve or reject a leave request.
+=== AUTONOMOUS AI AGENT TOOLS & CONTROLS ===
+You have 10 powerful tools to directly control the ERP system. Execute appropriate tool calls whenever the administrator asks you to perform an action:
+1. sendNotification - Send SMS or WhatsApp message to parent/phone.
+2. markAttendance - Mark attendance (present/absent/late/leave) for a student.
+3. createFeeRecord - Create a single fee voucher.
+4. recordFeePayment - Mark a pending/overdue fee as paid (cash/bank/jazzcash/easypaisa).
+5. generateMonthlyFees - Bulk generate monthly fee slips for a class or entire school.
+6. updateLeaveStatus - Approve or reject leave applications.
+7. addStudent - Add a new student record to the school.
+8. addTeacher - Add a new teacher profile.
+9. createExam - Schedule a new exam for a class.
+10. addHoliday - Post a new holiday or event to the calendar.
 
-=== RESPONSE RULES ===
-- Be concise but complete.
-- Use PKR for currency amounts.
-- When listing students, include name, class, roll number.
-- When writing in Urdu, use proper Urdu script (not Roman Urdu).
-- If asked to send a notification, always confirm the message contents and the channel (sms/whatsapp/both) and then invoke the tool.
-- If asked something you don't have data for, say so honestly.
-- Never make up data that isn't in the context above.
+=== EXECUTION RULES ===
+- Always invoke tool calls directly when an action is requested.
+- After tool execution completes, summarize the outcome clearly to the administrator.
+- Always use PKR for currency.
+- Never invent mock data that isn't in context.
     `.trim()
 
     const model = genAI.getGenerativeModel({
@@ -287,25 +393,38 @@ You are equipped with tools to perform real-time actions. If the administrator r
           sendNotificationTool,
           markAttendanceTool,
           createFeeRecordTool,
-          updateLeaveStatusTool
+          recordFeePaymentTool,
+          generateMonthlyFeesTool,
+          updateLeaveStatusTool,
+          addStudentTool,
+          addTeacherTool,
+          createExamTool,
+          addHolidayTool
         ]
       }]
     })
 
-    // Start a chat to cleanly process tool calls and return conversational confirmation
     const chat = model.startChat({
       history: [
         { role: 'user', parts: [{ text: systemPrompt }] },
-        { role: 'model', parts: [{ text: 'Understood. I have loaded the school database context and am ready to assist you or perform actions.' }] }
+        { role: 'model', parts: [{ text: 'Understood. I am online as the Autonomous AI ERP Agent for ' + schoolName + '. Ready to execute actions.' }] }
       ]
     })
 
-    let response = await chat.sendMessage(`Admin's request: ${message.trim()}`)
-    const functionCalls = response.response.functionCalls()
+    let response = await chat.sendMessage(`Admin request: ${message.trim()}`)
 
-    if (functionCalls && functionCalls.length > 0) {
+    const executedActions: Array<{ action: string; parameters: any; result: any }> = []
+    let iterations = 0
+    const maxIterations = 5
+
+    let functionCalls = response.response.functionCalls()
+
+    while (functionCalls && functionCalls.length > 0 && iterations < maxIterations) {
+      iterations++
       const call = functionCalls[0]
       let actionResult: any
+      let actionStatus = 'success'
+      let errorMessage: string | null = null
 
       try {
         if (call.name === 'sendNotification') {
@@ -313,7 +432,6 @@ You are equipped with tools to perform real-time actions. If the administrator r
           actionResult = await sendNotification(to, msgText, channel)
 
           try {
-            // Proactively log to notification_logs table so it shows up in parent portal!
             const cleanedPhone = to.replace(/[\s\-\(\)]/g, '')
             const suffix = cleanedPhone.slice(-10)
             const phoneQuery = `%${suffix}`
@@ -342,10 +460,9 @@ You are equipped with tools to perform real-time actions. If the administrator r
           } catch (logErr) {
             console.error('Failed to log AI notification:', logErr)
           }
+
         } else if (call.name === 'markAttendance') {
           const { studentId, date, status, notes } = call.args as any
-          
-          // Prevent duplicate key constraints by checking if the record already exists
           const { data: existing } = await supabase
             .from('attendance')
             .select('id')
@@ -361,9 +478,7 @@ You are equipped with tools to perform real-time actions. If the administrator r
             status,
             notes: notes || ''
           }
-          if (existing?.id) {
-            upsertData.id = existing.id
-          }
+          if (existing?.id) upsertData.id = existing.id
 
           const { data, error } = await supabase
             .from('attendance')
@@ -371,6 +486,7 @@ You are equipped with tools to perform real-time actions. If the administrator r
             .select()
 
           actionResult = error ? { success: false, error: error.message } : { success: true, data }
+
         } else if (call.name === 'createFeeRecord') {
           const { studentId, amount, feeType, month, dueDate } = call.args as any
           const { data, error } = await supabase
@@ -387,6 +503,75 @@ You are equipped with tools to perform real-time actions. If the administrator r
             .select()
 
           actionResult = error ? { success: false, error: error.message } : { success: true, data }
+
+        } else if (call.name === 'recordFeePayment') {
+          const { feeId, paymentMethod, paidDate, notes } = call.args as any
+          const { data, error } = await supabase
+            .from('fees')
+            .update({
+              status: 'paid',
+              payment_method: paymentMethod,
+              paid_date: paidDate || today,
+              notes: notes || 'Paid via AI Agent'
+            })
+            .eq('id', feeId)
+            .eq('school_id', schoolId)
+            .select()
+
+          actionResult = error ? { success: false, error: error.message } : { success: true, data }
+
+        } else if (call.name === 'generateMonthlyFees') {
+          const { month, dueDate, className } = call.args as any
+
+          if (!confirmAction) {
+            return NextResponse.json({
+              reply: `⚠️ **Action Confirmation Required:**\n\nAre you sure you want to bulk generate monthly fee vouchers for **${month || 'this month'}**${className ? ` for ${className}` : ' for all active students'}?`,
+              requiresConfirmation: true,
+              pendingAction: {
+                name: call.name,
+                args: call.args,
+                summary: `Bulk generate monthly fee vouchers (${month || 'Current Month'})`
+              }
+            })
+          }
+
+          let query = supabase
+            .from('students')
+            .select('id, monthly_fee, class_name')
+            .eq('school_id', schoolId)
+            .eq('is_active', true)
+
+          if (className) {
+            query = query.eq('class_name', className)
+          }
+
+          const { data: targetStudents, error: fetchErr } = await query
+
+          if (fetchErr) throw fetchErr
+
+          if (!targetStudents || targetStudents.length === 0) {
+            actionResult = { success: false, error: 'No active students found matching criteria.' }
+          } else {
+            const feeInserts = targetStudents.map(st => ({
+              school_id: schoolId,
+              student_id: st.id,
+              amount: st.monthly_fee || 5000,
+              fee_type: 'monthly',
+              month,
+              due_date: dueDate,
+              status: 'pending'
+            }))
+
+            const { data: insertedFees, error: insertErr } = await supabase
+              .from('fees')
+              .insert(feeInserts)
+              .select()
+
+            actionResult = insertErr
+              ? { success: false, error: insertErr.message }
+              : { success: true, generatedCount: insertedFees?.length ?? 0 }
+          }
+
         } else if (call.name === 'updateLeaveStatus') {
           const { leaveId, status } = call.args as any
           const { data, error } = await supabase
@@ -397,30 +582,152 @@ You are equipped with tools to perform real-time actions. If the administrator r
             .select()
 
           actionResult = error ? { success: false, error: error.message } : { success: true, data }
+
+        } else if (call.name === 'addStudent') {
+          const { fullName, className, section, rollNumber, parentName, parentPhone, parentEmail, monthlyFee } = call.args as any
+
+          const { data: newStudent, error: studentErr } = await supabase
+            .from('students')
+            .insert({
+              school_id: schoolId,
+              full_name: fullName,
+              class_name: className,
+              section,
+              roll_number: rollNumber,
+              parent_name: parentName,
+              parent_phone: parentPhone,
+              parent_email: parentEmail || null,
+              monthly_fee: monthlyFee || 5000,
+              fee_status: 'pending',
+              is_active: true,
+              admission_date: today
+            })
+            .select()
+            .single()
+
+          if (studentErr) {
+            actionResult = { success: false, error: studentErr.message }
+          } else {
+            if (parentEmail && parentEmail.trim()) {
+              try {
+                const { ensureParentAccount } = await import('@/lib/parentService')
+                await ensureParentAccount({
+                  schoolId,
+                  email: parentEmail,
+                  fullName: parentName
+                })
+              } catch (pErr) {
+                console.error('Failed auto parent creation in AI agent:', pErr)
+              }
+            }
+            actionResult = { success: true, student: newStudent }
+          }
+
+        } else if (call.name === 'addTeacher') {
+          const { fullName, email, phone, subject, classAssigned, salary } = call.args as any
+
+          const { data: newTeacher, error: teacherErr } = await supabase
+            .from('teachers')
+            .insert({
+              school_id: schoolId,
+              full_name: fullName,
+              email,
+              phone: phone || null,
+              subject,
+              class_assigned: classAssigned || null,
+              salary: salary ? Number(salary) : null,
+              is_active: true
+            })
+            .select()
+            .single()
+
+          actionResult = teacherErr ? { success: false, error: teacherErr.message } : { success: true, teacher: newTeacher }
+
+        } else if (call.name === 'createExam') {
+          const { examName, className, section, examDate } = call.args as any
+
+          const { data: newExam, error: examErr } = await supabase
+            .from('exams')
+            .insert({
+              school_id: schoolId,
+              exam_name: examName,
+              class_name: className,
+              section: section || 'A',
+              exam_date: examDate
+            })
+            .select()
+            .single()
+
+          actionResult = examErr ? { success: false, error: examErr.message } : { success: true, exam: newExam }
+
+        } else if (call.name === 'addHoliday') {
+          const { title, date, endDate, type, description } = call.args as any
+
+          const { data: newHoliday, error: holidayErr } = await supabase
+            .from('holidays')
+            .insert({
+              school_id: schoolId,
+              title,
+              date,
+              end_date: endDate || date,
+              type,
+              description: description || ''
+            })
+            .select()
+            .single()
+
+          actionResult = holidayErr ? { success: false, error: holidayErr.message } : { success: true, holiday: newHoliday }
+
         } else {
           actionResult = { success: false, error: 'Unknown tool call requested.' }
         }
+
       } catch (err: any) {
-        console.error('Failed executing tool:', err)
-        actionResult = { success: false, error: err.message || 'Internal tool execution error' }
+        console.error('Failed executing AI Agent tool:', err)
+        actionStatus = 'failed'
+        errorMessage = err.message || 'Internal tool execution error'
+        actionResult = { success: false, error: errorMessage }
       }
 
-      // Send the execution response back to Gemini to get a final conversational reply
+      // Log AI Action to ai_action_logs table in Supabase for audit trail
+      try {
+        await supabase.from('ai_action_logs').insert({
+          school_id: schoolId,
+          user_id: user.id,
+          user_email: user.email,
+          action_name: call.name,
+          parameters: call.args,
+          result: actionResult,
+          status: actionResult?.success === false ? 'failed' : actionStatus,
+          error_message: errorMessage || (actionResult?.success === false ? actionResult?.error : null)
+        })
+      } catch (auditErr) {
+        console.error('Failed to log AI audit action:', auditErr)
+      }
+
+      executedActions.push({
+        action: call.name,
+        parameters: call.args,
+        result: actionResult
+      })
+
+      // Send execution result back to Gemini for next step or conversational reply
       response = await chat.sendMessage([{
         functionResponse: {
           name: call.name,
           response: { result: actionResult }
         }
       }])
+
+      functionCalls = response.response.functionCalls()
     }
 
     const reply = response.response.text()
-    return NextResponse.json({ reply })
+    return NextResponse.json({ reply, executedActions })
 
   } catch (error: any) {
-    console.error('AI Chat error:', error)
+    console.error('AI Agent Chat error:', error)
 
-    // Handle Gemini API specific errors
     if (error?.message?.includes('API_KEY_INVALID') || error?.message?.includes('API key')) {
       return NextResponse.json({ error: 'Invalid Gemini API key. Check GEMINI_API_KEY in environment variables.' }, { status: 500 })
     }
@@ -431,3 +738,4 @@ You are equipped with tools to perform real-time actions. If the administrator r
     )
   }
 }
+

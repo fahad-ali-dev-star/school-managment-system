@@ -7,6 +7,12 @@ interface Message {
   role: 'user' | 'ai'
   content: string
   timestamp: Date
+  requiresConfirmation?: boolean
+  pendingAction?: {
+    name: string
+    args: any
+    summary: string
+  }
 }
 
 // Suggested quick questions shown in the chat
@@ -69,7 +75,7 @@ export default function AIChatbot() {
     }
   }, [])
 
-  const sendMessage = useCallback(async (text: string) => {
+  const sendMessage = useCallback(async (text: string, confirmAction = false, pendingAction: any = null) => {
     const trimmed = text.trim()
     if (!trimmed || isLoading) return
 
@@ -82,7 +88,7 @@ export default function AIChatbot() {
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: trimmed }),
+        body: JSON.stringify({ message: trimmed, confirmAction, pendingAction }),
       })
 
       const data = await res.json()
@@ -93,7 +99,13 @@ export default function AIChatbot() {
 
       setMessages(prev => [
         ...prev,
-        { role: 'ai', content: data.reply, timestamp: new Date() }
+        {
+          role: 'ai',
+          content: data.reply,
+          timestamp: new Date(),
+          requiresConfirmation: data.requiresConfirmation,
+          pendingAction: data.pendingAction
+        }
       ])
     } catch (error: any) {
       setMessages(prev => [
@@ -339,6 +351,67 @@ export default function AIChatbot() {
                 >
                   {msg.content}
                 </div>
+
+                {msg.requiresConfirmation && msg.pendingAction && (
+                  <div
+                    style={{
+                      marginTop: '8px',
+                      padding: '10px',
+                      borderRadius: '8px',
+                      background: '#fffbeb',
+                      border: '1px solid #fef3c7',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                      width: '100%',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: '#92400e' }}>
+                      {msg.pendingAction.summary}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => sendMessage(`Confirm and execute: ${msg.pendingAction?.summary}`, true, msg.pendingAction)}
+                        style={{
+                          flex: 1,
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          background: '#16a34a',
+                          color: 'white',
+                          border: 'none',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ✓ Confirm Action
+                      </button>
+                      <button
+                        onClick={() => {
+                          setMessages(prev => [
+                            ...prev,
+                            { role: 'user', content: 'Action cancelled by user.', timestamp: new Date() },
+                            { role: 'ai', content: 'Action cancelled.', timestamp: new Date() }
+                          ])
+                        }}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          background: '#dc2626',
+                          color: 'white',
+                          border: 'none',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ✕ Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <span style={{ fontSize: '10px', color: '#9ca3af', marginTop: '2px' }}>
                   {formatTime(msg.timestamp)}
                 </span>
