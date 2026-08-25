@@ -588,23 +588,27 @@ export default function AIChatbot() {
               transition: all 0.2s ease;
             }
 
-            @media (max-width: 480px) {
+            @media (max-width: 768px) {
               .ai-chat-window {
                 bottom: 0 !important;
                 right: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                max-height: 100vh !important;
-                max-height: -webkit-fill-available !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                height: 100dvh !important;
+                max-height: 100dvh !important;
                 border-radius: 0 !important;
                 border: none !important;
+                z-index: 999 !important;
               }
               .ai-chat-messages {
                 max-height: none !important;
               }
               .ai-chat-btn {
-                bottom: 16px !important;
+                bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
                 right: 16px !important;
+                z-index: 175 !important;
               }
             }
 

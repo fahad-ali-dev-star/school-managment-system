@@ -102,7 +102,7 @@ export default function PromoteStudentsModal({
         {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', color: '#dc2626', fontSize: 13, marginBottom: '1rem' }}>⚠ {error}</div>}
         
         <form onSubmit={handlePromote} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+          <div className="modal-form-grid" style={{ marginBottom: '1rem' }}>
             <div>
               <label style={lbl}>From Current Class</label>
               <select style={inp} value={fromClass} onChange={e => handleFromClassChange(e.target.value)}>
@@ -121,6 +121,7 @@ export default function PromoteStudentsModal({
 
           {fromClass && (
             <div style={{ flex: 1, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, marginTop: '0.5rem' }}>
+              <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', borderBottom: '1px solid #e2e8f0', zIndex: 10 }}>
                   <tr>
@@ -163,6 +164,7 @@ export default function PromoteStudentsModal({
                   )}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
 

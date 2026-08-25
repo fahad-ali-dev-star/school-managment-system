@@ -59,9 +59,11 @@ export function PWAInstallBanner() {
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
         style={{
           position: 'fixed',
-          bottom: '1rem',
+          bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
           left: '1rem',
           right: '1rem',
+          maxWidth: '500px',
+          margin: '0 auto',
           zIndex: 9999,
         }}
       >

@@ -121,7 +121,7 @@ export default function AttendanceMarker({ students, classes, initialAttendance,
   })
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 860 }}>
+    <div className="responsive-page-container" style={{ maxWidth: 860 }}>
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>Attendance</h1>
         <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>{displayDate}</p>

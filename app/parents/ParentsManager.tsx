@@ -56,7 +56,7 @@ export default function ParentsManager({ parents: init, students }: { parents: P
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div className="responsive-page-container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Parent Accounts</h1>
@@ -71,13 +71,13 @@ export default function ParentsManager({ parents: init, students }: { parents: P
         <strong>How it works:</strong> Add a parent email that matches their child&apos;s <em>Parent Email</em> in Students. Initial password is <strong>parent1122</strong>. Parents can change their password but not their email (only admin can).
       </div>
 
-      <div style={{ marginBottom: '1.25rem' }}>
-        <input placeholder="Search by name or email…" value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, width: 300 }} />
+      <div style={{ marginBottom: '1.25rem', display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+        <input placeholder="Search by name or email…" value={search} onChange={e => setSearch(e.target.value)} className="responsive-search-input" style={inp} />
       </div>
 
       {filtered.length === 0
         ? <div className="card" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No parent accounts yet.</div>
-        : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 14 }}>
+        : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 14 }}>
           {filtered.map(p => {
             const children = childrenOf(p.email)
             return (

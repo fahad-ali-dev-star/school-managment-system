@@ -126,7 +126,7 @@ export default function LeavesManager({
   ]
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div className="responsive-page-container">
       {/* Header */}
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Leave Management</h1>
@@ -169,7 +169,7 @@ export default function LeavesManager({
           <h2 style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', margin: '0 0 1.25rem' }}>New Leave Application</h2>
           {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', color: '#dc2626', fontSize: 13, marginBottom: '1rem' }}>⚠ {error}</div>}
           <form onSubmit={handleApply}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+            <div className="modal-form-grid">
               <div style={{ gridColumn: '1/-1' }}>
                 <label style={lbl}>Student *</label>
                 <select required style={inp} value={applyForm.student_id}
@@ -311,10 +311,11 @@ export default function LeavesManager({
       {tab !== 'apply' && tab !== 'balance' && (
         <>
           {/* Search */}
-          <div style={{ marginBottom: '1rem' }}>
+          <div style={{ marginBottom: '1rem', display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             <input placeholder="Search student name, roll no, leave type…" value={filterSearch}
               onChange={e => setSearch(e.target.value)}
-              style={{ ...inp, width: 300 }} />
+              className="responsive-search-input"
+              style={inp} />
           </div>
 
           {filtered.length === 0

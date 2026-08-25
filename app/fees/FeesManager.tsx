@@ -251,10 +251,10 @@ export default function FeesManager({ fees: init, students: initStudents, school
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div className="responsive-page-container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>Fee Collection</h1>
+          <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Fee Collection</h1>
           <p style={{ color: '#64748b', fontSize: 13, marginTop: 2 }}>
             {currentMonthLabel} · {fees.length} total records
           </p>
@@ -262,6 +262,7 @@ export default function FeesManager({ fees: init, students: initStudents, school
         <button onClick={openAdd} style={{
           padding: '9px 18px', background: '#4f46e5', color: 'white',
           border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
         }}>+ Record Payment</button>
       </div>
 
@@ -289,31 +290,31 @@ export default function FeesManager({ fees: init, students: initStudents, school
       </div>
 
       {/* Summary — current month only */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.875rem', marginBottom: '1.5rem' }}>
         {[
           { label: `${currentMonthLabel} — Collected`, value: `Rs ${collected.toLocaleString()}`, color: '#16a34a', bg: '#f0fdf4' },
           { label: `${currentMonthLabel} — Pending`,   value: `Rs ${pending.toLocaleString()}`,   color: '#d97706', bg: '#fffbeb' },
           { label: 'Total Records (All)', value: fees.length,                    color: '#4f46e5', bg: '#eef2ff' },
         ].map((s, i) => (
-          <div key={i} className="card" style={{ padding: '1.25rem' }}>
-            <p style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{s.label}</p>
-            <p style={{ fontSize: '1.6rem', fontWeight: 700, color: s.color }}>{s.value}</p>
+          <div key={i} className="card" style={{ padding: '1rem' }}>
+            <p style={{ fontSize: 10, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{s.label}</p>
+            <p style={{ fontSize: '1.4rem', fontWeight: 700, color: s.color, margin: 0 }}>{s.value}</p>
           </div>
         ))}
       </div>
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: 10, marginBottom: '1.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <input placeholder="Search student, receipt…" value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, width: 260 }} />
+        <input placeholder="Search student, receipt…" value={search} onChange={e => setSearch(e.target.value)} className="responsive-search-input" style={inp} />
         {activeTab === 'fees' && !showAllFees && (
-          <select value={filterStatus} onChange={e => setFilter(e.target.value)} style={{ ...inp, width: 'auto' }}>
+          <select value={filterStatus} onChange={e => setFilter(e.target.value)} style={{ ...inp, width: 'auto', flexShrink: 0 }}>
             <option value="">All pending statuses</option>
             <option value="pending">Pending</option>
             <option value="overdue">Overdue</option>
           </select>
         )}
         {activeTab === 'fees' && showAllFees && (
-          <select value={filterStatus} onChange={e => setFilter(e.target.value)} style={{ ...inp, width: 'auto' }}>
+          <select value={filterStatus} onChange={e => setFilter(e.target.value)} style={{ ...inp, width: 'auto', flexShrink: 0 }}>
             <option value="">All statuses</option>
             <option value="paid">Paid</option>
             <option value="pending">Pending</option>
@@ -321,7 +322,7 @@ export default function FeesManager({ fees: init, students: initStudents, school
           </select>
         )}
         {activeTab !== 'fees' && (
-          <select value={filterStatus} onChange={e => setFilter(e.target.value)} style={{ ...inp, width: 'auto' }}>
+          <select value={filterStatus} onChange={e => setFilter(e.target.value)} style={{ ...inp, width: 'auto', flexShrink: 0 }}>
             <option value="">All statuses</option>
             <option value="paid">Paid</option>
             <option value="pending">Pending</option>
@@ -357,7 +358,7 @@ export default function FeesManager({ fees: init, students: initStudents, school
       )}
 
       {/* Table */}
-      <div className="card" style={{ overflow: 'hidden' }}>
+      <div className="card table-responsive-wrapper" style={{ overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>
           {activeTab === 'fees' ? (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -489,8 +490,8 @@ export default function FeesManager({ fees: init, students: initStudents, school
 
       {/* Add modal */}
       {showForm && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
-          <div className="card fade-up" style={{ width: '100%', maxWidth: 500, padding: '1.75rem', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 250, padding: '1rem' }}>
+          <div className="card fade-up" style={{ width: '100%', maxWidth: 500, padding: '1.25rem', maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h2 style={{ fontSize: '1.1rem', fontWeight: 600 }}>{editingFee ? 'Edit' : 'Record'} Fee Payment</h2>
               <button onClick={() => { setShowForm(false); setEditingFee(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#64748b' }}>×</button>

@@ -319,13 +319,13 @@ export default function StudentsList({
   const feeBg    = (s: string) => s === 'paid' ? '#f0fdf4' : s === 'overdue' ? '#fef2f2' : '#fffbeb'
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div className="responsive-page-container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Students</h1>
           <p style={{ color: '#64748b', fontSize: 13, marginTop: 3 }}>{students.length} active students</p>
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           {isAtLimit && (
             <div style={{ padding: '0.5rem 1rem', background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: 8, color: '#92400e', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
               <Lock size={14} /> Student limit reached ({limit})
@@ -334,38 +334,38 @@ export default function StudentsList({
           <button 
             onClick={() => setShowPromote(true)}
             style={{ 
-              padding: '9px 18px', 
+              padding: '8px 14px', 
               background: 'white', 
               color: '#4f46e5', 
               border: '1px solid #c7d2fe', 
               borderRadius: 8, 
-              fontSize: 13, 
+              fontSize: 12, 
               fontWeight: 600, 
               cursor: 'pointer', 
               fontFamily: 'inherit',
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: 8
+              gap: 6
             }}
           >
-            ↗ Promote Students
+            ↗ Promote
           </button>
           <button 
             onClick={openAdd} 
             disabled={isAtLimit}
             style={{ 
-              padding: '9px 18px', 
+              padding: '8px 14px', 
               background: isAtLimit ? '#94a3b8' : '#4f46e5', 
               color: 'white', 
               border: 'none', 
               borderRadius: 8, 
-              fontSize: 13, 
+              fontSize: 12, 
               fontWeight: 600, 
               cursor: isAtLimit ? 'not-allowed' : 'pointer', 
               fontFamily: 'inherit',
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: 8
+              gap: 6
             }}
           >
             {isAtLimit ? 'Limit Reached' : '+ Add Student'}
@@ -374,14 +374,14 @@ export default function StudentsList({
       </div>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-        <input placeholder="Search name, roll no, parent…" value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, width: 260 }} />
-        <select value={cls} onChange={e => setCls(e.target.value)} style={{ ...inp, width: 'auto' }}>
+        <input placeholder="Search name, roll no, parent…" value={search} onChange={e => setSearch(e.target.value)} className="responsive-search-input" style={inp} />
+        <select value={cls} onChange={e => setCls(e.target.value)} style={{ ...inp, width: 'auto', flexShrink: 0 }}>
           <option value="">All classes</option>
           {classNames.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 
-      <div className="card" style={{ overflow: 'hidden' }}>
+      <div className="card table-responsive-wrapper" style={{ overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
@@ -431,15 +431,15 @@ export default function StudentsList({
       </div>
 
       {showForm && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
-          <div className="card" style={{ width: '100%', maxWidth: 540, padding: '1.75rem', maxHeight: '92vh', overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 250, padding: '1rem' }}>
+          <div className="card fade-up" style={{ width: '100%', maxWidth: 540, padding: '1.25rem', maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h2 style={{ fontSize: '1.1rem', fontWeight: 600, margin: 0 }}>{editing ? 'Edit Student' : 'Add New Student'}</h2>
               <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#64748b' }}>×</button>
             </div>
             {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', color: '#dc2626', fontSize: 13, marginBottom: '1rem' }}>⚠ {error}</div>}
             <form onSubmit={handleSave}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+              <div className="modal-form-grid">
                 <div style={{ gridColumn: '1/-1' }}>
                   <label style={lbl}>Select Class (auto-fills grade &amp; section)</label>
                   <select style={{ ...inp, borderColor: form.class_id ? '#6366f1' : '#e2e8f0' }}

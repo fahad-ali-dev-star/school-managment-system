@@ -75,7 +75,7 @@ export default function TeachersManager({ teachers: init, schoolId }: { teachers
   const expColor   = (y: number)  => y >= 8 ? '#16a34a' : y >= 4 ? '#d97706' : '#6366f1'
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div className="responsive-page-container">
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 12 }}>
         <div>
@@ -88,7 +88,7 @@ export default function TeachersManager({ teachers: init, schoolId }: { teachers
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         {[
           { label: 'Total teachers', value: teachers.length,                                                    color: '#4f46e5' },
           { label: 'Female staff',   value: teachers.filter(t => t.gender === 'female').length,                 color: '#db2777' },
@@ -105,8 +105,8 @@ export default function TeachersManager({ teachers: init, schoolId }: { teachers
       {/* Filters */}
       <div style={{ display: 'flex', gap: 10, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
         <input placeholder="Search name, subject, ID..." value={search}
-          onChange={e => setSearch(e.target.value)} style={{ ...inp, width: 260 }} />
-        <select value={filterSubject} onChange={e => setFilterSubject(e.target.value)} style={{ ...inp, width: 'auto' }}>
+          onChange={e => setSearch(e.target.value)} className="responsive-search-input" style={inp} />
+        <select value={filterSubject} onChange={e => setFilterSubject(e.target.value)} style={{ ...inp, width: 'auto', flexShrink: 0 }}>
           <option value="">All subjects</option>
           {subjects.map(s => <option key={s} value={s!}>{s}</option>)}
         </select>
@@ -115,7 +115,7 @@ export default function TeachersManager({ teachers: init, schoolId }: { teachers
       {/* Teacher cards grid */}
       {filtered.length === 0
         ? <div className="card" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No teachers found.</div>
-        : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 14 }}>
+        : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 14 }}>
           {filtered.map(t => (
             <div key={t.id} className="card" style={{ padding: '1.25rem' }}>
               {/* Top */}
@@ -171,7 +171,7 @@ export default function TeachersManager({ teachers: init, schoolId }: { teachers
             </div>
             {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', color: '#dc2626', fontSize: 13, marginBottom: '1rem' }}>⚠ {error}</div>}
             <form onSubmit={handleSave}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+              <div className="modal-form-grid">
                 <div style={{ gridColumn: '1/-1' }}>
                   <label style={lbl}>Full Name *</label>
                   <input required style={inp} value={form.full_name ?? ''} placeholder="e.g. Ms. Sara Ahmed"

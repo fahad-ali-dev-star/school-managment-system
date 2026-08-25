@@ -153,7 +153,7 @@ export default function ClassesManager({ classes: init, schoolId }: { classes: a
   const totalCapacity = classes.reduce((s, c) => s + c.capacity, 0)
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div className="responsive-page-container">
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 12 }}>
         <div>
@@ -166,7 +166,7 @@ export default function ClassesManager({ classes: init, schoolId }: { classes: a
       </div>
 
       {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         {[
           { label: 'Total sections', value: classes.length, color: '#4f46e5' },
           { label: 'Students enrolled', value: totalStudents, color: '#16a34a' },
@@ -181,10 +181,11 @@ export default function ClassesManager({ classes: init, schoolId }: { classes: a
       </div>
 
       {/* Search */}
-      <div style={{ marginBottom: '1.25rem' }}>
+      <div style={{ marginBottom: '1.25rem', display: 'flex', flexWrap: 'wrap', gap: 10 }}>
         <input placeholder="Search by grade, section or teacher..." value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ ...inp, width: 300 }} />
+          className="responsive-search-input"
+          style={inp} />
       </div>
 
       {/* Classes grouped by grade */}
@@ -257,7 +258,7 @@ export default function ClassesManager({ classes: init, schoolId }: { classes: a
             </div>
             {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', color: '#dc2626', fontSize: 13, marginBottom: '1rem' }}>⚠ {error}</div>}
             <form onSubmit={handleSave}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+              <div className="modal-form-grid">
                 <div>
                   <label style={lbl}>Grade / Class *</label>
                   <select required style={inp} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}>

@@ -91,34 +91,34 @@ export default async function DashboardPage() {
   const firstName = profile.full_name.split(' ')[0]
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div style={{ padding: '1.25rem 1rem', maxWidth: 1400, margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
           Good morning, {firstName} 👋
         </h1>
-        <p style={{ color: '#64748b', fontSize: 14, marginTop: 4 }}>{dateStr}</p>
+        <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>{dateStr}</p>
       </div>
 
       {/* Stats grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: '1rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: '0.875rem', marginBottom: '1.5rem' }}>
         {stats.map((s, i) => (
-          <div key={i} className="card" style={{ padding: '1.25rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>
+          <div key={i} className="card" style={{ padding: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+              <p style={{ fontSize: 10, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
                 {s.label}
               </p>
-              <span style={{ fontSize: 16 }}>{s.icon}</span>
+              <span style={{ fontSize: 15 }}>{s.icon}</span>
             </div>
-            <p style={{ fontSize: '1.75rem', fontWeight: 700, color: s.color, margin: 0 }}>{s.value}</p>
+            <p style={{ fontSize: '1.5rem', fontWeight: 700, color: s.color, margin: 0 }}>{s.value}</p>
           </div>
         ))}
       </div>
 
       {/* Quick actions */}
-      <div className="card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: '1rem', color: '#0f172a' }}>Quick Actions</h2>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+      <div className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontSize: 14, fontWeight: 600, marginBottom: '0.875rem', color: '#0f172a' }}>Quick Actions</h2>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {[
             { href: '/classes',    label: '🏫 Manage Classes',   bg: '#7c3aed' },
             { href: '/teachers',   label: '👨‍🏫 Manage Teachers',  bg: '#0284c7' },
@@ -128,16 +128,16 @@ export default async function DashboardPage() {
             { href: '/holidays',   label: '🗓️ Holidays',          bg: '#d97706' },
           ].map(a => (
             <a key={a.href} href={a.href} style={{
-              padding: '9px 16px', borderRadius: 8, background: a.bg,
-              color: 'white', textDecoration: 'none', fontSize: 13, fontWeight: 500,
-              transition: 'opacity 0.15s',
+              padding: '8px 14px', borderRadius: 8, background: a.bg,
+              color: 'white', textDecoration: 'none', fontSize: 12, fontWeight: 600,
+              transition: 'opacity 0.15s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
             }}>{a.label}</a>
           ))}
         </div>
       </div>
 
       {/* Today summary + Upcoming Holidays */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+      <div className="dashboard-summary-grid" style={{ display: 'grid', gap: '1rem' }}>
         <div className="card" style={{ padding: '1.25rem' }}>
           <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', margin: '0 0 12px' }}>Today&apos;s Attendance</h3>
           {todayAtt.length === 0

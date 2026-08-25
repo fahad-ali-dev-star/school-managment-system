@@ -70,31 +70,31 @@ export default function AnalyticsDashboard({ data, schoolName }: Props) {
   ]
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div className="responsive-page-container">
 
       {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
           📊 Analytics Dashboard
         </h1>
         <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>{schoolName} · {today}</p>
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: '1rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: '0.875rem', marginBottom: '1.5rem' }}>
         {kpiCards.map((k, i) => (
           <div key={i} style={cardStyle}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <p style={labelStyle}>{k.label}</p>
-              <span style={{ fontSize: 20 }}>{k.icon}</span>
+              <span style={{ fontSize: 18 }}>{k.icon}</span>
             </div>
-            <p style={{ fontSize: '1.75rem', fontWeight: 700, color: k.color, margin: 0 }}>{k.value}</p>
+            <p style={{ fontSize: '1.5rem', fontWeight: 700, color: k.color, margin: 0 }}>{k.value}</p>
           </div>
         ))}
       </div>
 
       {/* Row 1: Fee Bar Chart + Attendance Line Chart */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      <div className="analytics-grid-2col">
 
         {/* Fee Collection Bar Chart */}
         <div style={cardStyle}>
@@ -102,7 +102,7 @@ export default function AnalyticsDashboard({ data, schoolName }: Props) {
             💰 Monthly Fee Collection
           </p>
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={data.feeChartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+            <BarChart data={data.feeChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748b' }} />
               <YAxis tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
@@ -136,7 +136,7 @@ export default function AnalyticsDashboard({ data, schoolName }: Props) {
       </div>
 
       {/* Row 2: Grade Bar + Fee Pie + Leave Pie */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      <div className="analytics-grid-3col">
 
         {/* Grade Distribution */}
         <div style={cardStyle}>
@@ -229,7 +229,7 @@ export default function AnalyticsDashboard({ data, schoolName }: Props) {
       </div>
 
       {/* Row 3: Notification types + Attendance Rate Radial */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      <div className="analytics-grid-2col">
 
         {/* Notification by type bar */}
         <div style={cardStyle}>
@@ -239,10 +239,10 @@ export default function AnalyticsDashboard({ data, schoolName }: Props) {
           {data.notifChartData.length === 0
             ? <div style={{ height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: 13 }}>No notifications sent yet</div>
             : <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={data.notifChartData} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+              <BarChart data={data.notifChartData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11, fill: '#64748b' }} allowDecimals={false} />
-                <YAxis type="category" dataKey="type" tick={{ fontSize: 11, fill: '#64748b' }} width={80} />
+                <YAxis type="category" dataKey="type" tick={{ fontSize: 11, fill: '#64748b' }} width={75} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="count" name="Sent" fill="#4f46e5" radius={[0,4,4,0]} />
               </BarChart>
@@ -255,7 +255,7 @@ export default function AnalyticsDashboard({ data, schoolName }: Props) {
           <p style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', margin: '0 0 1rem' }}>
             🎯 Overall Attendance Rate
           </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+          <div className="analytics-radial-box">
             <ResponsiveContainer width={160} height={160}>
               <RadialBarChart
                 cx="50%" cy="50%"

@@ -44,7 +44,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               position: 'fixed',
               bottom: '24px',
               right: '24px',
-              zIndex: 50,
+              zIndex: 175,
               width: '56px',
               height: '56px',
               borderRadius: '50%',

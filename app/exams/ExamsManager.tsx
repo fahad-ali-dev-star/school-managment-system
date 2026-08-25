@@ -166,8 +166,8 @@ export default function ExamsManager({
   if (view === 'marks' && activeExam) {
     const subjects: Subject[] = activeExam.subjects ?? []
     return (
-      <div style={{ padding: '2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: '1.5rem' }}>
+      <div className="responsive-page-container">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: '1.5rem', flexWrap: 'wrap' }}>
           <button onClick={() => setView('list')} style={{ padding: '7px 14px', border: '1px solid #e2e8f0', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>← Back</button>
           <div>
             <h1 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Enter Marks</h1>
@@ -186,7 +186,7 @@ export default function ExamsManager({
               {/* Subject tabs */}
               {subjects.map(subject => (
                 <div key={subject.id} className="card" style={{ marginBottom: '1.25rem', overflow: 'hidden' }}>
-                  <div style={{ padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                     <div>
                       <span style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{subject.name}</span>
                       <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 8 }}>Total: {subject.total_marks} marks | Pass: {subject.passing_marks}</span>
@@ -195,50 +195,52 @@ export default function ExamsManager({
                       {Object.values(marksData[subject.id] ?? {}).filter(v => v !== '').length}/{students.length} entered
                     </span>
                   </div>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                    <thead>
-                      <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                        <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: 12 }}>Roll No</th>
-                        <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: 12 }}>Student Name</th>
-                        <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: 12, width: 140 }}>Marks (out of {subject.total_marks})</th>
-                        <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: 12, width: 60 }}>Grade</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {students.map((st: any, i: number) => {
-                        const val = marksData[subject.id]?.[st.id] ?? ''
-                        const num = Number(val)
-                        const pct = val ? (num / subject.total_marks) * 100 : null
-                        const grade = pct !== null ? (pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B' : pct >= 60 ? 'C' : pct >= 40 ? 'D' : 'F') : ''
-                        return (
-                          <tr key={st.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 ? '#fafafa' : 'white' }}>
-                            <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: '#6366f1', fontWeight: 500 }}>{st.roll_number}</td>
-                            <td style={{ padding: '8px 14px', fontWeight: 500, color: '#0f172a' }}>{st.full_name}</td>
-                            <td style={{ padding: '8px 14px' }}>
-                              <input
-                                type="number" min="0" max={subject.total_marks}
-                                value={val}
-                                onChange={e => {
-                                  const v = e.target.value
-                                  setMarksData(p => ({
-                                    ...p,
-                                    [subject.id]: { ...(p[subject.id] ?? {}), [st.id]: v }
-                                  }))
-                                }}
-                                style={{ ...inp, width: 110, padding: '6px 10px' }}
-                                placeholder="0"
-                              />
-                            </td>
-                            <td style={{ padding: '8px 14px' }}>
-                              {grade && (
-                                <span style={{ fontWeight: 700, color: gradeColor(grade), fontSize: 14 }}>{grade}</span>
-                              )}
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+                  <div className="table-responsive-wrapper" style={{ border: 'none', borderRadius: 0 }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                          <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: 12, whiteSpace: 'nowrap' }}>Roll No</th>
+                          <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: 12, whiteSpace: 'nowrap' }}>Student Name</th>
+                          <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: 12, width: 140, whiteSpace: 'nowrap' }}>Marks (out of {subject.total_marks})</th>
+                          <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: 12, width: 60, whiteSpace: 'nowrap' }}>Grade</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {students.map((st: any, i: number) => {
+                          const val = marksData[subject.id]?.[st.id] ?? ''
+                          const num = Number(val)
+                          const pct = val ? (num / subject.total_marks) * 100 : null
+                          const grade = pct !== null ? (pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B' : pct >= 60 ? 'C' : pct >= 40 ? 'D' : 'F') : ''
+                          return (
+                            <tr key={st.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 ? '#fafafa' : 'white' }}>
+                              <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: '#6366f1', fontWeight: 500 }}>{st.roll_number}</td>
+                              <td style={{ padding: '8px 14px', fontWeight: 500, color: '#0f172a' }}>{st.full_name}</td>
+                              <td style={{ padding: '8px 14px' }}>
+                                <input
+                                  type="number" min="0" max={subject.total_marks}
+                                  value={val}
+                                  onChange={e => {
+                                    const v = e.target.value
+                                    setMarksData(p => ({
+                                      ...p,
+                                      [subject.id]: { ...(p[subject.id] ?? {}), [st.id]: v }
+                                    }))
+                                  }}
+                                  style={{ ...inp, width: 110, padding: '6px 10px' }}
+                                  placeholder="0"
+                                />
+                              </td>
+                              <td style={{ padding: '8px 14px' }}>
+                                {grade && (
+                                  <span style={{ fontWeight: 700, color: gradeColor(grade), fontSize: 14 }}>{grade}</span>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               ))}
 
@@ -259,7 +261,7 @@ export default function ExamsManager({
   // ── Create exam view ──────────────────────────────────────
   if (view === 'create') {
     return (
-      <div style={{ padding: '2rem', maxWidth: 700 }}>
+      <div className="responsive-page-container" style={{ maxWidth: 700 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: '1.5rem' }}>
           <button onClick={() => setView('list')} style={{ padding: '7px 14px', border: '1px solid #e2e8f0', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>← Back</button>
           <h1 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Create New Exam</h1>
@@ -271,7 +273,7 @@ export default function ExamsManager({
           {/* Exam details */}
           <div className="card" style={{ padding: '1.5rem', marginBottom: '1rem' }}>
             <h2 style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', margin: '0 0 1rem' }}>Exam Details</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+            <div className="modal-form-grid">
               <div style={{ gridColumn: '1/-1' }}>
                 <label style={lbl}>Exam Title *</label>
                 <input required style={inp} value={examForm.title} placeholder="e.g. Mid Term Exam 2026"
@@ -327,8 +329,8 @@ export default function ExamsManager({
               <button type="button" onClick={addSubject} style={{ padding: '5px 12px', border: '1px solid #c7d2fe', borderRadius: 6, background: '#eef2ff', cursor: 'pointer', fontSize: 12, color: '#4f46e5', fontFamily: 'inherit' }}>+ Add Subject</button>
             </div>
             {subjectList.map((sub, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: 8, marginBottom: 8, alignItems: 'end' }}>
-                <div>
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8, marginBottom: 12, alignItems: 'end', background: '#f8fafc', padding: 8, borderRadius: 8 }}>
+                <div style={{ gridColumn: '1 / -1' }}>
                   {i === 0 && <label style={lbl}>Subject Name</label>}
                   <input style={inp} value={sub.name} placeholder="e.g. Mathematics"
                     onChange={e => setSubjectList(p => p.map((s, idx) => idx === i ? { ...s, name: e.target.value } : s))} />
@@ -345,7 +347,7 @@ export default function ExamsManager({
                 </div>
                 <button type="button" onClick={() => removeSubject(i)}
                   style={{ padding: '8px 10px', border: '1px solid #fecaca', borderRadius: 6, background: '#fef2f2', cursor: 'pointer', color: '#dc2626', fontFamily: 'inherit', marginTop: i === 0 ? 20 : 0 }}>
-                  ×
+                  Remove ×
                 </button>
               </div>
             ))}
@@ -364,7 +366,7 @@ export default function ExamsManager({
 
   // ── Main list view ────────────────────────────────────────
   return (
-    <div style={{ padding: '2rem' }}>
+    <div className="responsive-page-container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Exams & Marks</h1>

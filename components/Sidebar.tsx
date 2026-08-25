@@ -138,10 +138,15 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
     <aside style={{
       width: 240, height: '100%',
       background: 'white', borderRight: '1px solid #e2e8f0',
-      display: 'flex', flexDirection: 'column', overflowY: 'auto',
+      display: 'flex', flexDirection: 'column', overflow: 'hidden',
+      position: 'relative',
     }}>
-      {/* Brand */}
-      <div style={{ padding: '1.25rem', borderBottom: '1px solid #f1f5f9' }}>
+      {/* Brand Header (Sticky at top) */}
+      <div style={{
+        padding: '1.25rem', borderBottom: '1px solid #f1f5f9',
+        background: 'white', position: 'sticky', top: 0, zIndex: 10,
+        boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 36, height: 36, borderRadius: 10, background: '#4f46e5',
@@ -227,9 +232,9 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
           )}
         </div>
       </div>
- 
-      {/* Nav */}
-      <nav style={{ flex: 1, padding: '0.75rem' }}>
+
+      {/* Nav List (Middle Scrollable) */}
+      <nav style={{ flex: 1, padding: '0.75rem', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {nav.map(item => {
           const active    = clickedHref
             ? (clickedHref === item.href)
@@ -302,8 +307,11 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
         })}
       </nav>
 
-      {/* User */}
-      <div style={{ padding: '0.75rem', borderTop: '1px solid #f1f5f9' }}>
+      {/* User Footer (Sticky at bottom) */}
+      <div style={{
+        padding: '0.75rem', borderTop: '1px solid #f1f5f9',
+        background: 'white', position: 'sticky', bottom: 0, zIndex: 10,
+      }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 10,
           padding: 10, borderRadius: 8, background: '#f8fafc', marginBottom: 8,
@@ -341,44 +349,174 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
     </aside>
   )
 
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (open) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [open])
+
+  // Select primary items for mobile bottom nav bar based on role
+  const bottomNavItems = user.role === 'teacher' ? [
+    { href: '/teacher', label: 'Home', icon: '◻' },
+    { href: '/teacher/attendance', label: 'Attendance', icon: '✅' },
+    { href: '/teacher/exams', label: 'Exams', icon: '📝' },
+    { href: '/teacher/account', label: 'Account', icon: '🔑' },
+  ] : user.role === 'parent' ? [
+    { href: '/parent', label: 'Home', icon: '◻' },
+    { href: '/parent/attendance', label: 'Attendance', icon: '✅' },
+    { href: '/parent/fees', label: 'Fees', icon: '💰' },
+    { href: '/parent/alerts', label: 'Alerts', icon: '📱' },
+  ] : [
+    { href: '/dashboard', label: 'Home', icon: '◻' },
+    { href: '/attendance', label: 'Attendance', icon: '✅' },
+    { href: '/fees', label: 'Fees', icon: '💰' },
+    { href: '/notifications', label: 'Alerts', icon: '📱' },
+  ]
+
   return (
     <>
-      {/* Desktop: sticky sidebar */}
+      {/* Desktop: fixed non-scrolling sidebar */}
       <div style={{
-        width: 240, flexShrink: 0, position: 'sticky', top: 0, height: '100vh',
-        display: 'none',
+        width: 240, flexShrink: 0, position: 'fixed', top: 0, left: 0, bottom: 0, height: '100vh',
+        zIndex: 100, display: 'none',
       }} className="sidebar-desktop">
         {sidebarContent}
       </div>
 
-      {/* Mobile: hamburger button */}
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="sidebar-hamburger"
-        style={{
-          position: 'fixed', top: 12, left: 12, zIndex: 200,
-          width: 40, height: 40, borderRadius: 10, background: '#4f46e5',
-          border: 'none', cursor: 'pointer', display: 'none',
-          alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 5,
-        }}
-        aria-label="Toggle menu"
-      >
-        <span style={{ width: 18, height: 2, background: 'white', borderRadius: 2, display: 'block' }}/>
-        <span style={{ width: 18, height: 2, background: 'white', borderRadius: 2, display: 'block' }}/>
-        <span style={{ width: 18, height: 2, background: 'white', borderRadius: 2, display: 'block' }}/>
-      </button>
+      {/* Mobile Top Header Bar */}
+      <header className="sidebar-mobile-header" style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 180,
+        height: 60, background: 'rgba(255, 255, 255, 0.96)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        borderBottom: '1px solid #e2e8f0',
+        display: 'none', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 16px', boxSizing: 'border-box',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8, background: '#4f46e5',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: 0, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user.school_name}
+            </p>
+            <p style={{ fontSize: 10, color: '#64748b', margin: 0, textTransform: 'capitalize' }}>
+              {user.role} Portal
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {isOfflineMode ? (
+            <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 12, background: '#fffbeb', color: '#b45309', fontWeight: 600, border: '1px solid #fef3c7' }}>
+              ⚠️ Offline
+            </span>
+          ) : (
+            <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 12, background: '#f0fdf4', color: '#15803d', fontWeight: 600, border: '1px solid #dcfce7' }}>
+              ● Live
+            </span>
+          )}
+
+          <button
+            onClick={() => setOpen(o => !o)}
+            style={{
+              width: 38, height: 38, borderRadius: 10, background: '#f1f5f9',
+              border: '1px solid #e2e8f0', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4,
+            }}
+            aria-label="Toggle navigation drawer"
+          >
+            <span style={{ width: 16, height: 2, background: '#334155', borderRadius: 2, display: 'block' }}/>
+            <span style={{ width: 16, height: 2, background: '#334155', borderRadius: 2, display: 'block' }}/>
+            <span style={{ width: 16, height: 2, background: '#334155', borderRadius: 2, display: 'block' }}/>
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile Bottom Navigation Bar (PWA standard) */}
+      <nav className="sidebar-mobile-bottom-nav" style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 180,
+        height: 'calc(60px + env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        background: 'rgba(255, 255, 255, 0.96)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderTop: '1px solid #e2e8f0',
+        display: 'none', alignItems: 'center', justifyContent: 'space-around',
+        boxSizing: 'border-box',
+      }}>
+        {bottomNavItems.map(item => {
+          const isActive = pathname === item.href || (item.href !== '/dashboard' && item.href !== '/teacher' && item.href !== '/parent' && pathname.startsWith(item.href))
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                flex: 1, height: '100%', textDecoration: 'none',
+                color: isActive ? '#4f46e5' : '#64748b',
+                transition: 'color 0.15s ease',
+              }}
+            >
+              <span style={{ fontSize: 18, transform: isActive ? 'scale(1.1)' : 'scale(1)', transition: 'transform 0.15s' }}>
+                {item.icon}
+              </span>
+              <span style={{ fontSize: 10, fontWeight: isActive ? 700 : 500, marginTop: 2 }}>
+                {item.label}
+              </span>
+            </Link>
+          )
+        })}
+
+        {/* Drawer Menu Button in Bottom Nav */}
+        <button
+          onClick={() => setOpen(o => !o)}
+          style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            flex: 1, height: '100%', background: 'transparent', border: 'none', cursor: 'pointer',
+            color: open ? '#4f46e5' : '#64748b', fontFamily: 'inherit',
+          }}
+        >
+          <span style={{ fontSize: 18, transform: open ? 'scale(1.1)' : 'scale(1)', transition: 'transform 0.15s' }}>
+            ☰
+          </span>
+          <span style={{ fontSize: 10, fontWeight: open ? 700 : 500, marginTop: 2 }}>
+            Menu
+          </span>
+        </button>
+      </nav>
 
       {/* Mobile: overlay drawer */}
       {open && (
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 190, background: 'rgba(15,23,42,0.5)' }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 190, background: 'rgba(15,23,42,0.5)',
+            backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
+            animation: 'fadeIn 0.2s ease-out',
+          }}
           onClick={() => setOpen(false)}
         />
       )}
       <div style={{
-        position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 195,
+        position: 'fixed', top: 0, left: 0, height: '100dvh', zIndex: 195,
         transform: open ? 'translateX(0)' : 'translateX(-100%)',
-        transition: 'transform 0.25s ease',
+        transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: open ? '4px 0 24px rgba(0,0,0,0.15)' : 'none',
       }} className="sidebar-mobile-drawer">
         {sidebarContent}
       </div>
@@ -397,12 +535,14 @@ export default function Sidebar({ user, navItems }: { user: AuthUser; navItems?:
       <style>{`
         @media (min-width: 769px) {
           .sidebar-desktop { display: block !important; }
-          .sidebar-hamburger { display: none !important; }
+          .sidebar-mobile-header { display: none !important; }
+          .sidebar-mobile-bottom-nav { display: none !important; }
           .sidebar-mobile-drawer { display: none !important; }
         }
         @media (max-width: 768px) {
           .sidebar-desktop { display: none !important; }
-          .sidebar-hamburger { display: flex !important; }
+          .sidebar-mobile-header { display: flex !important; }
+          .sidebar-mobile-bottom-nav { display: flex !important; }
           .sidebar-mobile-drawer { display: block !important; }
         }
 

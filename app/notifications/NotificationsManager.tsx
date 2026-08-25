@@ -193,7 +193,7 @@ export default function NotificationsManager({
   ]
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div className="responsive-page-container">
       {/* Header */}
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
@@ -224,7 +224,7 @@ export default function NotificationsManager({
       {/* Quick action banners */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 12, marginBottom: '1.5rem' }}>
         {absentToday.length > 0 && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <div>
               <p style={{ fontSize: 13, fontWeight: 600, color: '#dc2626', margin: 0 }}>
                 📋 {absentToday.length} student{absentToday.length !== 1 ? 's' : ''} absent today
@@ -238,7 +238,7 @@ export default function NotificationsManager({
           </div>
         )}
         {pendingFeeStudents.length > 0 && (
-          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <div>
               <p style={{ fontSize: 13, fontWeight: 600, color: '#d97706', margin: 0 }}>
                 💰 {pendingFeeStudents.length} student{pendingFeeStudents.length !== 1 ? 's' : ''} with pending fees
@@ -286,7 +286,7 @@ export default function NotificationsManager({
 
       {/* ── QUICK SEND ── */}
       {tab === 'quick' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+        <div className="analytics-grid-2col" style={{ alignItems: 'start' }}>
           <div className="card" style={{ padding: '1.5rem' }}>
             <h2 style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', margin: '0 0 1.25rem' }}>Send to Single Student</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
@@ -346,7 +346,7 @@ export default function NotificationsManager({
 
       {/* ── BULK SEND ── */}
       {tab === 'bulk' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+        <div className="analytics-grid-2col" style={{ alignItems: 'start' }}>
           <div className="card" style={{ padding: '1.5rem' }}>
             <h2 style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', margin: '0 0 1.25rem' }}>Bulk Notification</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
@@ -448,7 +448,7 @@ export default function NotificationsManager({
 
       {/* ── CUSTOM MESSAGE ── */}
       {tab === 'custom' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+        <div className="analytics-grid-2col" style={{ alignItems: 'start' }}>
           <div className="card" style={{ padding: '1.5rem' }}>
             <h2 style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', margin: '0 0 1.25rem' }}>Send Custom Message</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
@@ -499,8 +499,8 @@ export default function NotificationsManager({
         <>
           <div style={{ display: 'flex', gap: 10, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
             <input placeholder="Search student, message, phone…" value={search}
-              onChange={e => setSearch(e.target.value)} style={{ ...inp, width: 260 }} />
-            <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ ...inp, width: 'auto' }}>
+              onChange={e => setSearch(e.target.value)} className="responsive-search-input" style={inp} />
+            <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ ...inp, width: 'auto', flexShrink: 0 }}>
               <option value="">All types</option>
               {Object.entries(TYPE_CFG).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
             </select>
