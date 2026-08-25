@@ -9,58 +9,159 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      - name: Install PostgreSQL client
-        run: sudo apt-get install -y postgresql-client
+      - name: Install PostgreSQL client (v16)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lsb-release wget ca-certificates gnupg
+          sudo install -d /etc/apt/keyrings
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/keyrings/postgresql.gpg
+          echo "deb [signed-by=/etc/apt/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-16
+          pg_dump --version
 
       - name: Keep Supabase project alive (ping)
         env:
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_SERVICE_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
-          curl -s "${SUPABASE_URL}/rest/v1/students?select=count" \
-            -H "apikey: ${SUPABASE_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_KEY}" \
-          && echo "Ping successful — project stays active"
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+            echo "⚠️ WARNING: SUPABASE_URL or SUPABASE_KEY secret is missing. Skipping REST keep-alive ping."
+          else
+            URL="${SUPABASE_URL%/}"
+            echo "Pinging Supabase REST API at ${URL}/rest/v1/ ..."
+            
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${URL}/rest/v1/schools?select=count" \
+              -H "apikey: ${SUPABASE_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_KEY}" || echo "000")
+            
+            if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+              echo "✅ Ping successful (HTTP $HTTP_STATUS) — project stays active"
+            else
+              echo "Attempting root REST fallback ping..."
+              ROOT_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${URL}/rest/v1/" \
+                -H "apikey: ${SUPABASE_KEY}" \
+                -H "Authorization: Bearer ${SUPABASE_KEY}" || echo "000")
+              
+              if [ "$ROOT_STATUS" -ge 200 ] && [ "$ROOT_STATUS" -lt 300 ]; then
+                echo "✅ Fallback ping successful (HTTP $ROOT_STATUS) — project stays active"
+              else
+                echo "⚠️ REST Keep-alive ping returned HTTP $HTTP_STATUS / $ROOT_STATUS"
+              fi
+            fi
+          fi
 
-      - name: Validate Database URL
+      - name: Validate & Sanitize Database URL
         env:
-          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          RAW_DB_URL: ${{ secrets.SUPABASE_DB_URL || secrets.DATABASE_URL || secrets.POSTGRES_URL }}
         run: |
           node -e '
-            const urlStr = process.env.DB_URL;
-            if (!urlStr) {
-              console.error("❌ DB_URL is empty");
+            const fs = require("fs");
+            const rawUrl = process.env.RAW_DB_URL;
+            if (!rawUrl) {
+              console.error("❌ ERROR: Neither SUPABASE_DB_URL, DATABASE_URL, nor POSTGRES_URL secret is set in GitHub Secrets.");
+              console.error("Please add SUPABASE_DB_URL or DATABASE_URL under repository Settings -> Secrets and variables -> Actions.");
               process.exit(1);
             }
-            // Check for unencoded special characters in the connection string
-            const doubleAt = (urlStr.match(/@/g) || []).length;
-            if (doubleAt > 1) {
-              console.error("❌ ERROR: Your DB_URL contains multiple @ symbols. This indicates your database password contains an unencoded @ character, which breaks URL parsing.");
-              console.error("Please URL-encode it (replace @ with %40).");
+
+            try {
+              let cleanUrl = rawUrl.trim().replace(/^["'\s]+|["'\s]+$/g, "");
+              let protocol = "postgresql://";
+              if (cleanUrl.startsWith("postgres://")) protocol = "postgres://";
+              else if (cleanUrl.startsWith("postgresql://")) protocol = "postgresql://";
+              else {
+                console.error("❌ ERROR: Database URL must start with postgresql:// or postgres://");
+                process.exit(1);
+              }
+
+              const numAts = (cleanUrl.match(/@/g) || []).length;
+              const lastAtIdx = cleanUrl.lastIndexOf("@");
+              const hashIdx = cleanUrl.indexOf("#");
+              const hasUnencodedChars = numAts > 1 || (hashIdx !== -1 && hashIdx < lastAtIdx);
+
+              let finalUrl = "";
+              if (!hasUnencodedChars) {
+                try {
+                  const u = new URL(cleanUrl);
+                  if (!u.searchParams.has("sslmode")) {
+                    u.searchParams.set("sslmode", "require");
+                  }
+                  finalUrl = u.toString();
+                  console.log("✅ Connection URL parsed cleanly with standard URL parser.");
+                } catch (e) {}
+              }
+
+              if (!finalUrl) {
+                console.log("ℹ️ Unencoded special characters detected in database password. Auto-encoding password...");
+                const remainder = cleanUrl.slice(protocol.length);
+                const relLastAt = remainder.lastIndexOf("@");
+                if (relLastAt === -1) {
+                  console.error("❌ ERROR: Unable to locate host separator (@) in connection string.");
+                  process.exit(1);
+                }
+
+                const userinfo = remainder.slice(0, relLastAt);
+                const hostAndBeyond = remainder.slice(relLastAt + 1);
+                const firstColonIdx = userinfo.indexOf(":");
+                let user = userinfo;
+                let pass = "";
+                if (firstColonIdx !== -1) {
+                  user = userinfo.slice(0, firstColonIdx);
+                  pass = userinfo.slice(firstColonIdx + 1);
+                }
+
+                try {
+                  pass = encodeURIComponent(decodeURIComponent(pass));
+                } catch (e) {
+                  pass = encodeURIComponent(pass);
+                }
+
+                const tempUrlStr = `${protocol}${user}:${pass}@${hostAndBeyond}`;
+                try {
+                  const u = new URL(tempUrlStr);
+                  if (!u.searchParams.has("sslmode")) {
+                    u.searchParams.set("sslmode", "require");
+                  }
+                  finalUrl = u.toString();
+                } catch (e2) {
+                  finalUrl = tempUrlStr;
+                }
+              }
+
+              const hostMatch = finalUrl.match(/@([^:\/]+)/);
+              if (hostMatch && hostMatch[1].endsWith(".supabase.co") && !hostMatch[1].includes("pooler")) {
+                console.log("⚠️ NOTICE: Direct host detected (" + hostMatch[1] + "). GitHub Actions runners communicate over IPv4.");
+                console.log("If pg_dump fails with timeout or Could Not Resolve Host, use Supabase Session Pooler URL (e.g. aws-0-[region].pooler.supabase.com or db.[ref].pooler.supabase.com on port 5432).");
+              }
+
+              console.log("✅ Database connection URL validated and sanitized successfully.");
+              fs.appendFileSync(process.env.GITHUB_ENV, `CLEAN_DB_URL=${finalUrl}\n`);
+            } catch (err) {
+              console.error("❌ Error validating DB_URL:", err.message);
               process.exit(1);
             }
-            if (urlStr.includes("#") || urlStr.includes("?") || urlStr.includes(" ")) {
-              console.error("❌ ERROR: Your DB_URL contains unencoded special characters (#, ?, or spaces) which breaks URL parsing.");
-              console.error("Please URL-encode your password (replace # with %23, ? with %3F).");
-              process.exit(1);
-            }
-            console.log("✅ Connection string format looks clean.");
           '
 
-
       - name: Create backup
-        env:
-          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-          pg_dump -d "$DB_URL" \
+          BACKUP_FILE="backup_${TIMESTAMP}.sql"
+          
+          echo "Creating PostgreSQL backup using pg_dump..."
+          pg_dump -d "$CLEAN_DB_URL" \
             --no-owner \
             --no-acl \
             --clean \
             --if-exists \
-            -f "backup_${TIMESTAMP}.sql"
-          gzip "backup_${TIMESTAMP}.sql"
-          echo "Backup created: backup_${TIMESTAMP}.sql.gz"
+            -f "$BACKUP_FILE"
+          
+          if [ ! -f "$BACKUP_FILE" ] || [ ! -s "$BACKUP_FILE" ]; then
+            echo "❌ ERROR: Dump file $BACKUP_FILE was not created or is empty!"
+            exit 1
+          fi
+
+          gzip "$BACKUP_FILE"
+          echo "✅ Backup successfully created and compressed: ${BACKUP_FILE}.gz"
 
       - name: Upload backup as artifact
         uses: actions/upload-artifact@v4
@@ -68,4 +169,5 @@ jobs:
           name: supabase-backup-${{ github.run_number }}
           path: "*.sql.gz"
           retention-days: 30   # keeps last 30 days of backups, free
+          if-no-files-found: error
 
