@@ -83,7 +83,7 @@ export const getProfile = cache(async () => {
 
     return {
       ...profile,
-      school_name: schoolData?.name ?? 'Beacon Light School',
+      school_name: schoolData?.name ?? 'School Management ERP',
       plan: currentPlan
     }
   } catch (err: any) {

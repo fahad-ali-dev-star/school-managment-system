@@ -159,5 +159,5 @@ export default async function AnalyticsPage() {
     classAttChartData: [],
   }
 
-  return <AnalyticsDashboard data={analyticsData} schoolName="Beacon Light School" />
+  return <AnalyticsDashboard data={analyticsData} schoolName={profile.school_name ?? 'School Management ERP'} />
 }

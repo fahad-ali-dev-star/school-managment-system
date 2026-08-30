@@ -118,7 +118,7 @@ function SuperAdminContent() {
       <header className="admin-header">
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.025em' }}>
-            <span style={{ color: '#4f46e5' }}>Beacon</span> Control Center
+            <span style={{ color: '#4f46e5' }}>ERP</span> Super Admin Center
           </h1>
           <p style={{ fontSize: '0.875rem', color: '#64748b' }}>Platform Multi-Tenant Management</p>
         </div>
@@ -230,7 +230,7 @@ function SuperAdminContent() {
                 <div className="form-group">
                   <label className="form-label">School Name</label>
                   <input 
-                    required className="form-input" placeholder="e.g. Beacon Light Grammar"
+                    required className="form-input" placeholder="e.g. Horizon Model Academy"
                     value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
                   />
                 </div>

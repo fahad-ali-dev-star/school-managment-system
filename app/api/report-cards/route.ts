@@ -167,8 +167,8 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     school: {
-      name: school?.name ?? 'Beacon Light School',
-      address: school?.address ?? 'Rajanpur, Punjab, Pakistan',
+      name: school?.name ?? 'School Management ERP',
+      address: school?.address ?? '',
       phone: school?.phone ?? '',
     },
     exam: {

@@ -78,7 +78,7 @@ export default async function NotificationsPage() {
       templates={templates}
       students={students}
       classes={classes}
-      schoolName={school?.name ?? 'Beacon Light School'}
+      schoolName={school?.name ?? 'School Management ERP'}
       pendingFeeStudents={pendingFees}
       absentToday={todayAbsent.map((a: any) => a.students).filter(Boolean)}
       schoolId={profile.school_id}

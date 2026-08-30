@@ -108,7 +108,7 @@ export async function middleware(request: NextRequest) {
         full_name: profile.full_name,
         email: profile.email,
         role: profile.role,
-        school_name: schoolData?.name ?? 'Beacon Light School',
+        school_name: schoolData?.name ?? 'School Management ERP',
         plan: schoolData?.plan ?? 'free',
       }
       const cookieOpts = { path: '/', maxAge: 60 * 60 * 24 * 7 }
@@ -173,7 +173,7 @@ export async function middleware(request: NextRequest) {
             full_name: profile.full_name,
             email: profile.email,
             role: profile.role,
-            school_name: schoolData?.name ?? 'Beacon Light School',
+            school_name: schoolData?.name ?? 'School Management ERP',
             plan: schoolData?.plan ?? 'free'
           }
           if (role) {

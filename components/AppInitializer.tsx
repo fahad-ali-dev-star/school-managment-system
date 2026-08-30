@@ -1,7 +1,8 @@
 'use client'
 // components/AppInitializer.tsx
 // Runs once on every page load:
-//   1. Gets the current user's school_id from Supabase auth
+//   1. Gets the current user's school_id from Supabase auth (online)
+//      OR reads it from localStorage cache (offline)
 //   2. Pulls all school data into IndexedDB (only if online)
 //   3. Starts the reconnect listener so offline writes auto-sync
 
@@ -10,10 +11,27 @@ import { syncAllDataFromSupabase } from '@/lib/offlineData'
 import { startSyncListener }       from '@/lib/syncOnReconnect'
 import { createClient }            from '@/lib/supabase/client'
 
+const SCHOOL_ID_KEY = 'sms_school_id'
+
 export default function AppInitializer() {
   useEffect(() => {
     async function init() {
       try {
+        // ── OFFLINE FAST PATH ──────────────────────────────────────────────
+        // If the device is already offline, skip the network round-trip.
+        // Use the school_id we persisted to localStorage on the last online session.
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+          const cachedSchoolId = localStorage.getItem(SCHOOL_ID_KEY)
+          if (cachedSchoolId) {
+            console.log('[AppInitializer] Offline boot — using cached school_id:', cachedSchoolId)
+            startSyncListener(cachedSchoolId)
+          } else {
+            console.warn('[AppInitializer] Offline boot — no cached school_id found. Sync listener not started.')
+          }
+          return
+        }
+
+        // ── ONLINE PATH ────────────────────────────────────────────────────
         const supabase = createClient()
 
         // Get the currently authenticated user
@@ -41,6 +59,9 @@ export default function AppInitializer() {
           return
         }
 
+        // ✅ Persist school_id so offline boots can start the sync listener
+        localStorage.setItem(SCHOOL_ID_KEY, schoolId)
+
         // 1. Pull data from Supabase into IndexedDB (skipped automatically if offline)
         await syncAllDataFromSupabase(schoolId)
 
@@ -51,6 +72,12 @@ export default function AppInitializer() {
       } catch (err) {
         // Graceful degradation — if Supabase is unreachable we still have IndexedDB
         console.warn('[AppInitializer] Init failed (possibly offline):', err)
+
+        // Try offline fallback even after an unexpected error
+        const cachedSchoolId = localStorage.getItem(SCHOOL_ID_KEY)
+        if (cachedSchoolId) {
+          startSyncListener(cachedSchoolId)
+        }
       }
     }
 

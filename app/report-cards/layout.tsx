@@ -11,7 +11,7 @@ export default async function ReportCardsLayout({ children }: { children: React.
     id: profile.id, school_id: profile.school_id,
     full_name: profile.full_name, email: profile.email,
     role: profile.role as AuthUser['role'],
-    school_name: profile.school_name ?? 'Beacon Light School',
+    school_name: profile.school_name ?? 'School Management ERP',
     plan: profile.plan as string
   }
 

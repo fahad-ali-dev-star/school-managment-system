@@ -3,8 +3,9 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Student } from '@/types'
 import { PLAN_LIMITS, PlanType } from '@/lib/plans'
-import { Lock } from 'lucide-react'
+import { Lock, FileSpreadsheet } from 'lucide-react'
 import PromoteStudentsModal from '@/components/PromoteStudentsModal'
+import BulkImportStudentsModal from '@/components/BulkImportStudentsModal'
 import { isOffline, queueOfflineMutation, getMergedOfflineState, generateUUID } from '@/lib/offlineSync'
 
 interface ClassOption { id: string; name: string; section: string }
@@ -35,6 +36,7 @@ export default function StudentsList({
   const [cls, setCls]           = useState('')
   const [showForm, setShowForm] = useState(false)
   const [showPromote, setShowPromote] = useState(false)
+  const [showBulkImport, setShowBulkImport] = useState(false)
   const [editing, setEditing]   = useState<Student | null>(null)
   const [saving, setSaving]     = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -332,6 +334,25 @@ export default function StudentsList({
             </div>
           )}
           <button 
+            onClick={() => setShowBulkImport(true)}
+            style={{ 
+              padding: '8px 14px', 
+              background: '#f0fdf4', 
+              color: '#166534', 
+              border: '1px solid #bbf7d0', 
+              borderRadius: 8, 
+              fontSize: 12, 
+              fontWeight: 600, 
+              cursor: 'pointer', 
+              fontFamily: 'inherit',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6
+            }}
+          >
+            <FileSpreadsheet size={15} /> Import CSV
+          </button>
+          <button 
             onClick={() => setShowPromote(true)}
             style={{ 
               padding: '8px 14px', 
@@ -534,6 +555,21 @@ export default function StudentsList({
           classes={classes}
           onClose={() => setShowPromote(false)}
           onSuccess={() => window.location.reload()}
+        />
+      )}
+
+      {showBulkImport && (
+        <BulkImportStudentsModal
+          classes={classes}
+          existingStudents={students}
+          schoolId={schoolId}
+          planLimit={limit}
+          onClose={() => setShowBulkImport(false)}
+          onSuccess={(newStudents) => {
+            setStudents(prev => [...prev, ...newStudents])
+            setShowBulkImport(false)
+            alert(`Success! Successfully imported ${newStudents.length} students.`)
+          }}
         />
       )}
     </div>

@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
 import { PWAInstallBanner } from '@/components/PWAInstallBanner'
 import OfflineBanner        from '@/components/OfflineBanner'
 import AppInitializer       from '@/components/AppInitializer'
 
-const inter = Inter({ subsets: ['latin'], display: 'swap' })
+// Font is set via globals.css body { font-family: 'Inter', system-ui, ... }
+// No Google Fonts network call needed — build works offline too.
+
 
 export const metadata: Metadata = {
   title: 'School Management System',
@@ -32,7 +33,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.className}>
+    <html lang="en">
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
