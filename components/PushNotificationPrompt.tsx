@@ -20,14 +20,15 @@ export default function PushNotificationPrompt({
   userEmail?: string
 }) {
   const [isSupported, setIsSupported] = useState<boolean>(false)
+  const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>('default')
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
   const [testLoading, setTestLoading] = useState<boolean>(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null)
   const [dismissed, setDismissed] = useState<boolean>(false)
+  const [showHelp, setShowHelp] = useState<boolean>(false)
 
-  useEffect(() => {
-    // Check if push & service worker are supported in current browser
+  const checkStatus = () => {
     if (
       typeof window !== 'undefined' &&
       'serviceWorker' in navigator &&
@@ -35,6 +36,7 @@ export default function PushNotificationPrompt({
       'Notification' in window
     ) {
       setIsSupported(true)
+      setPermissionState(Notification.permission)
 
       // Check current subscription state
       navigator.serviceWorker.ready
@@ -42,12 +44,20 @@ export default function PushNotificationPrompt({
         .then((sub) => {
           if (sub) {
             setIsSubscribed(true)
+          } else {
+            setIsSubscribed(false)
           }
         })
         .catch((err) => {
           console.warn('[PushPrompt] Error checking subscription:', err)
         })
+    } else {
+      setPermissionState('unsupported')
     }
+  }
+
+  useEffect(() => {
+    checkStatus()
   }, [])
 
   const subscribeToPush = async () => {
@@ -55,9 +65,11 @@ export default function PushNotificationPrompt({
     setMessage(null)
 
     try {
-      if (Notification.permission === 'denied') {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+        setPermissionState('denied')
+        setShowHelp(true)
         setMessage({
-          text: 'Notification permission is blocked. Please allow notifications in your mobile browser settings.',
+          text: 'Notification permission is currently blocked in your browser. Follow the instructions below to allow notifications.',
           type: 'error',
         })
         setLoading(false)
@@ -65,9 +77,21 @@ export default function PushNotificationPrompt({
       }
 
       const permission = await Notification.requestPermission()
+      setPermissionState(permission)
+
+      if (permission === 'denied') {
+        setShowHelp(true)
+        setMessage({
+          text: 'Notification permission was blocked. Please enable notifications in your browser settings to receive popups.',
+          type: 'error',
+        })
+        setLoading(false)
+        return
+      }
+
       if (permission !== 'granted') {
         setMessage({
-          text: 'Notifications were not permitted.',
+          text: 'Notifications were not allowed.',
           type: 'info',
         })
         setLoading(false)
@@ -322,6 +346,7 @@ export default function PushNotificationPrompt({
           style={{
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'space-between',
             gap: '0.5rem',
             fontSize: '0.8rem',
             fontWeight: 500,
@@ -341,12 +366,100 @@ export default function PushNotificationPrompt({
                 : '#334155',
           }}
         >
-          {message.type === 'success' ? (
-            <CheckCircle2 size={15} />
-          ) : (
-            <AlertCircle size={15} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {message.type === 'success' ? (
+              <CheckCircle2 size={15} />
+            ) : (
+              <AlertCircle size={15} />
+            )}
+            <span>{message.text}</span>
+          </div>
+          {permissionState === 'denied' && (
+            <button
+              onClick={() => setShowHelp(!showHelp)}
+              style={{
+                background: '#fee2e2',
+                border: '1px solid #fca5a5',
+                borderRadius: '6px',
+                color: '#991b1b',
+                padding: '0.25rem 0.6rem',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {showHelp ? 'Hide Steps' : 'How to Unblock?'}
+            </button>
           )}
-          {message.text}
+        </div>
+      )}
+
+      {showHelp && permissionState === 'denied' && (
+        <div
+          style={{
+            background: '#ffffff',
+            border: '1px solid #fed7aa',
+            borderRadius: 10,
+            padding: '0.85rem 1rem',
+            fontSize: '0.8rem',
+            color: '#334155',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem',
+          }}
+        >
+          <div style={{ fontWeight: 700, color: '#c2410c' }}>
+            🔓 How to Allow Notifications in Your Browser:
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem' }}>
+            <div style={{ background: '#fff7ed', padding: '0.6rem 0.75rem', borderRadius: 8 }}>
+              <div style={{ fontWeight: 600, color: '#9a3412', marginBottom: 3 }}>📱 Android (Chrome / Samsung)</div>
+              <div>1. Tap the <strong>🔒 Lock icon</strong> or <strong>Tune icon (🎚️)</strong> on the address bar.</div>
+              <div>2. Tap <strong>Permissions</strong> → <strong>Notifications</strong>.</div>
+              <div>3. Change to <strong>Allow (Turn ON)</strong>.</div>
+            </div>
+            <div style={{ background: '#eff6ff', padding: '0.6rem 0.75rem', borderRadius: 8 }}>
+              <div style={{ fontWeight: 600, color: '#1e40af', marginBottom: 3 }}>🍎 iPhone (iOS 16.4+)</div>
+              <div>1. Tap the <strong>Share</strong> button (box with arrow) in Safari.</div>
+              <div>2. Tap <strong>Add to Home Screen</strong>.</div>
+              <div>3. Open the installed App from Home Screen → Enable Notifications.</div>
+            </div>
+            <div style={{ background: '#f8fafc', padding: '0.6rem 0.75rem', borderRadius: 8 }}>
+              <div style={{ fontWeight: 600, color: '#334155', marginBottom: 3 }}>💻 Desktop (Chrome / Edge)</div>
+              <div>1. Click the <strong>🔒 View site information</strong> icon next to the URL.</div>
+              <div>2. Toggle <strong>Notifications</strong> to <strong>Allow</strong>.</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
+            <button
+              onClick={() => {
+                checkStatus()
+                if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                  subscribeToPush()
+                } else if (typeof Notification !== 'undefined' && Notification.permission !== 'denied') {
+                  subscribeToPush()
+                } else {
+                  setMessage({
+                    text: 'Still showing blocked. Please ensure notifications are toggled to "Allow" in browser settings.',
+                    type: 'error',
+                  })
+                }
+              }}
+              style={{
+                background: '#ea580c',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '0.4rem 0.8rem',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              🔄 Check Permission & Enable
+            </button>
+          </div>
         </div>
       )}
     </div>
