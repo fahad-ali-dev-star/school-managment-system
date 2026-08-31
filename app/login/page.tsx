@@ -168,7 +168,7 @@ function LoginContent() {
           </>
         )}
 
-        {isSignup && !roleSelection && (
+        {!roleSelection && (
           <div style={{ 
             marginTop: '1.5rem', 
             padding: '1rem', 
@@ -179,9 +179,9 @@ function LoginContent() {
             fontSize: 13,
             lineHeight: 1.5
           }}>
-            <strong>Want to join BeaconERP?</strong><br />
+            <strong>Want to join School ERP?</strong><br />
             We currently onboard new schools manually to ensure the best setup. 
-            Please contact us at <strong>sales@beaconerp.com</strong> for a demo account.
+            Please contact us at <a href="tel:03400872273" style={{ color: '#0f766e', fontWeight: 700, textDecoration: 'underline' }}>03400872273</a> for a demo account.
           </div>
         )}
 
