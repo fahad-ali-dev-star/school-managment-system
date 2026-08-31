@@ -102,6 +102,26 @@ export async function POST(req: NextRequest) {
     .select()
     .single()
 
+  // Dispatch Web Push notification to parent's mobile PWA
+  try {
+    const { dispatchPushToParents } = await import('@/lib/webPush')
+    const typeTitle = (type ?? 'custom').charAt(0).toUpperCase() + (type ?? 'custom').slice(1)
+    const title = `${school?.name ?? 'School'} Alert: ${typeTitle}`
+    const targetEmail = (targetChannel === 'portal') ? recipient : (studentData?.parent_email ?? undefined)
+    
+    await dispatchPushToParents({
+      schoolId: profile.school_id,
+      parentEmail: targetEmail,
+      studentId: student_id ?? undefined,
+      title,
+      body: message,
+      url: '/parent/alerts',
+      tag: `alert-${type || 'school'}-${student_id || 'general'}`,
+    })
+  } catch (pushErr) {
+    console.warn('[WebPush] Error dispatching push:', pushErr)
+  }
+
   return NextResponse.json({
     success: result.success,
     error:   result.error,

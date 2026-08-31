@@ -92,6 +92,24 @@ export async function POST(req: NextRequest) {
       })
       .select().single()
 
+    // Dispatch Web Push to parent
+    try {
+      const { dispatchPushToParents } = await import('@/lib/webPush')
+      const typeTitle = (type ?? 'announcement').charAt(0).toUpperCase() + (type ?? 'announcement').slice(1)
+      const title = `${schoolName} Alert: ${typeTitle}`
+      await dispatchPushToParents({
+        schoolId: profile.school_id,
+        parentEmail: student.parent_email ?? undefined,
+        studentId: student.id,
+        title,
+        body: message,
+        url: '/parent/alerts',
+        tag: `bulk-alert-${student.id}`,
+      })
+    } catch (pushErr) {
+      console.warn('[WebPush] Error dispatching push in bulk:', pushErr)
+    }
+
     if (result.success) results.sent++
     else results.failed++
     if (log) results.logs.push(log)

@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import { getProfile } from '@/lib/supabase/getProfile'
 import Sidebar from '@/components/Sidebar'
+import ParentNotificationListener from '@/components/ParentNotificationListener'
+import PushNotificationPrompt from '@/components/PushNotificationPrompt'
 import type { AuthUser } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -21,6 +23,10 @@ export default async function ParentPortalLayout({ children }: { children: React
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar user={authUser} />
       <main style={{ flex: 1, overflow: 'auto', background: '#f8fafc' }}>
+        <ParentNotificationListener userEmail={profile.email} />
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.25rem 1.5rem 0' }}>
+          <PushNotificationPrompt userEmail={profile.email} />
+        </div>
         {children}
       </main>
     </div>
