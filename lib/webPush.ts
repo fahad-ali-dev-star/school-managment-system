@@ -5,12 +5,12 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 // Used for immediate development and production if env vars are not yet configured.
 const DEFAULT_VAPID_PUBLIC =
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
-  'BNOvUa_JdCgU6Hl9vW3bL7K1a5v1Q8G2M7P4S3R8t9X2L6z5m0N3V1C7k8P4q2W9'
+  'BHUFarnsN-tV7cgp7jG5O9gDwr4tkxTiF8VZhosEvJixAM1WlgrfUSLWwungpkBSdkgpr2YW4q_3fNpngaCubnw'
 const DEFAULT_VAPID_PRIVATE =
   process.env.VAPID_PRIVATE_KEY ||
-  'e-F8L7uK5v3m0R2T9q1W4Z6p8x2c7n1j3H5k8A0b4v8'
+  'sRhvlJhCJqsgmqTWWWzhUQMyPku67HqSK0QzQk1FS3M'
 const DEFAULT_VAPID_SUBJECT =
-  process.env.VAPID_SUBJECT || 'mailto:support@school.com'
+  process.env.VAPID_SUBJECT || 'mailto:admin@beaconlight.edu.pk'
 
 let isConfigured = false
 
