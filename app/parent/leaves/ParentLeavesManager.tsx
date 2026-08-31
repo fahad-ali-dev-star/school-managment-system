@@ -120,7 +120,7 @@ export default function ParentLeavesManager({
   ]
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div className="responsive-page-container">
       {/* Header */}
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Apply Leaves</h1>
@@ -128,23 +128,23 @@ export default function ParentLeavesManager({
       </div>
 
       {students.length === 0 ? (
-        <div className="card" style={{ padding: '2.5rem', textAlign: 'center', color: '#94a3b8' }}>
-          <p style={{ fontSize: 16, marginBottom: 8 }}>No children found</p>
-          <p style={{ fontSize: 13 }}>Your parent email is not linked to any active student. Please contact the school administrator.</p>
+        <div className="card" style={{ padding: '2.5rem 1rem', textAlign: 'center', color: '#94a3b8' }}>
+          <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 8, color: '#475569' }}>No children found</p>
+          <p style={{ fontSize: 13, margin: 0 }}>Your parent email is not linked to any active student. Please contact the school administrator.</p>
         </div>
       ) : (
         <>
           {/* Stats row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 110px), 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
             {[
               { label: 'Total Applications', value: applications.length, color: '#4f46e5' },
               { label: 'Pending Approval',   value: pending,             color: '#d97706' },
               { label: 'Approved',            value: approved,            color: '#16a34a' },
               { label: 'Rejected',            value: rejected,            color: '#dc2626' },
             ].map((s, i) => (
-              <div key={i} className="card" style={{ padding: '1rem' }}>
-                <p style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 6px' }}>{s.label}</p>
-                <p style={{ fontSize: '1.6rem', fontWeight: 700, color: s.color, margin: 0 }}>{s.value}</p>
+              <div key={i} className="card" style={{ padding: '0.875rem 1rem' }}>
+                <p style={{ fontSize: 10, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>{s.label}</p>
+                <p style={{ fontSize: '1.4rem', fontWeight: 700, color: s.color, margin: 0 }}>{s.value}</p>
               </div>
             ))}
           </div>
@@ -153,7 +153,7 @@ export default function ParentLeavesManager({
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: '1.25rem' }}>
             {TABS.map(t => (
               <button key={t.key} onClick={() => setTab(t.key)} style={{
-                padding: '7px 14px', borderRadius: 20, fontSize: 13, border: 'none',
+                padding: '6px 12px', borderRadius: 20, fontSize: 12.5, border: 'none',
                 fontWeight: tab === t.key ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
                 background: tab === t.key ? '#4f46e5' : 'white',
                 color: tab === t.key ? 'white' : '#475569',
@@ -166,12 +166,12 @@ export default function ParentLeavesManager({
 
           {/* ── Apply Leave Form ── */}
           {tab === 'apply' && (
-            <div className="card" style={{ padding: '1.75rem', maxWidth: 560 }}>
+            <div className="card" style={{ padding: '1.25rem', maxWidth: 560, width: '100%', boxSizing: 'border-box' }}>
               <h2 style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', margin: '0 0 1.25rem' }}>New Leave Application</h2>
               {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', color: '#dc2626', fontSize: 13, marginBottom: '1rem' }}>⚠ {error}</div>}
               
               <form onSubmit={handleApply}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+                <div className="modal-form-grid">
                   <div style={{ gridColumn: '1/-1' }}>
                     <label style={lbl}>Student (Child) *</label>
                     <select required style={inp} value={applyForm.student_id}
@@ -193,7 +193,7 @@ export default function ParentLeavesManager({
                     {leaveTypes.length === 0 ? (
                       <p style={{ fontSize: 13, color: '#dc2626' }}>No leave types set up by the school.</p>
                     ) : (
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 120px), 1fr))', gap: 8 }}>
                         {leaveTypes.map(lt => (
                           <button key={lt.id} type="button"
                             onClick={() => setApplyForm(f => ({ ...f, leave_type_id: lt.id }))}
@@ -201,7 +201,7 @@ export default function ParentLeavesManager({
                               padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
                               border: `2px solid ${applyForm.leave_type_id === lt.id ? lt.color : '#e2e8f0'}`,
                               background: applyForm.leave_type_id === lt.id ? lt.color + '15' : 'white',
-                              fontFamily: 'inherit', textAlign: 'left', minWidth: 130, flex: '1 1 0px'
+                              fontFamily: 'inherit', textAlign: 'left', width: '100%', boxSizing: 'border-box'
                             }}>
                             <p style={{ fontSize: 13, fontWeight: 600, color: lt.color, margin: 0 }}>{lt.name}</p>
                             <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0' }}>Max {lt.max_days} days</p>
@@ -224,7 +224,7 @@ export default function ParentLeavesManager({
 
                   {applyForm.from_date && applyForm.to_date && (
                     <div style={{ gridColumn: '1/-1' }}>
-                      <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#0284c7' }}>
+                      <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, padding: '10px 14px', fontSize: 12.5, color: '#0284c7', lineHeight: 1.4 }}>
                         📅 <strong>{totalDays} day{totalDays !== 1 ? 's' : ''}</strong> of leave requested
                         ({new Date(applyForm.from_date + 'T12:00:00').toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}
                         {' → '}
@@ -242,9 +242,9 @@ export default function ParentLeavesManager({
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 10, marginTop: '1.25rem' }}>
-                  <button type="button" onClick={() => setTab('all')} style={{ flex: 1, padding: 10, border: '1px solid #e2e8f0', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Cancel</button>
-                  <button type="submit" disabled={saving || leaveTypes.length === 0} style={{ flex: 2, padding: 10, background: saving ? '#a5b4fc' : '#4f46e5', color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                <div style={{ display: 'flex', gap: 10, marginTop: '1.25rem', flexWrap: 'wrap' }}>
+                  <button type="button" onClick={() => setTab('all')} style={{ flex: 1, minWidth: 100, padding: 10, border: '1px solid #e2e8f0', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Cancel</button>
+                  <button type="submit" disabled={saving || leaveTypes.length === 0} style={{ flex: 2, minWidth: 140, padding: 10, background: saving ? '#a5b4fc' : '#4f46e5', color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
                     {saving ? 'Submitting…' : 'Submit Application'}
                   </button>
                 </div>
@@ -255,7 +255,7 @@ export default function ParentLeavesManager({
           {/* ── Leave Balance View ── */}
           {tab === 'balance' && (
             <div>
-              <div className="card" style={{ padding: '1.25rem', marginBottom: '1.25rem', maxWidth: 500 }}>
+              <div className="card" style={{ padding: '1rem', marginBottom: '1.25rem', maxWidth: 500, width: '100%', boxSizing: 'border-box' }}>
                 <label style={lbl}>Select Child</label>
                 <select style={inp} value={balStudent}
                   onChange={e => { setBalStudent(e.target.value) }}>
@@ -270,13 +270,13 @@ export default function ParentLeavesManager({
               {loadingBal && <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>Loading balance…</div>}
 
               {!loadingBal && balances.length === 0 && (
-                <div className="card" style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                <div className="card" style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8' }}>
                   No leave balance records found for this student.
                 </div>
               )}
 
               {balances.length > 0 && !loadingBal && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: 10 }}>
                   {balances.map(b => {
                     const used      = b.used_days
                     const allowed   = b.total_allowed
@@ -286,13 +286,13 @@ export default function ParentLeavesManager({
                     const lt        = b.leave_type
 
                     return (
-                      <div key={b.id} className="card" style={{ padding: '1.25rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                      <div key={b.id} className="card" style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                           <div>
-                            <p style={{ fontSize: 14, fontWeight: 600, color: lt?.color ?? '#4f46e5', margin: 0 }}>{lt?.name ?? 'Leave'}</p>
+                            <p style={{ fontSize: 13.5, fontWeight: 600, color: lt?.color ?? '#4f46e5', margin: 0 }}>{lt?.name ?? 'Leave'}</p>
                             <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0' }}>{lt?.description}</p>
                           </div>
-                          <span style={{ fontSize: 20, fontWeight: 700, color: remaining > 0 ? '#16a34a' : '#dc2626' }}>
+                          <span style={{ fontSize: 18, fontWeight: 700, color: remaining > 0 ? '#16a34a' : '#dc2626' }}>
                             {remaining}
                           </span>
                         </div>
@@ -300,7 +300,7 @@ export default function ParentLeavesManager({
                         <div style={{ height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
                           <div style={{ height: '100%', width: `${Math.min(pct, 100)}%`, background: barColor, borderRadius: 3, transition: 'width 0.4s' }} />
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#64748b' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: '#64748b' }}>
                           <span>Used: <strong>{used}</strong></span>
                           <span>Allowed: <strong>{allowed}</strong></span>
                           <span style={{ color: remaining > 0 ? '#16a34a' : '#dc2626', fontWeight: 600 }}>
@@ -322,11 +322,11 @@ export default function ParentLeavesManager({
               <div style={{ marginBottom: '1rem' }}>
                 <input placeholder="Search child name, leave type…" value={filterSearch}
                   onChange={e => setSearch(e.target.value)}
-                  style={{ ...inp, width: 300 }} />
+                  style={{ ...inp, width: '100%', maxWidth: 360 }} />
               </div>
 
               {filtered.length === 0
-                ? <div className="card" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+                ? <div className="card" style={{ padding: '2.5rem 1rem', textAlign: 'center', color: '#94a3b8' }}>
                     No {tab !== 'all' ? tab : ''} applications found.
                   </div>
                 : <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -338,18 +338,18 @@ export default function ParentLeavesManager({
                     const toDate   = new Date(app.to_date   + 'T12:00:00').toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })
 
                     return (
-                      <div key={app.id} className="card" style={{ padding: '1.25rem' }}>
+                      <div key={app.id} className="card" style={{ padding: '1.15rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
 
                           {/* Left: student + details */}
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
                               {/* Status badge */}
-                              <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>
+                              <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>
                                 {cfg.icon} {cfg.label}
                               </span>
                               {/* Leave type badge */}
-                              <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: (app.leave_type?.color ?? '#4f46e5') + '15', color: app.leave_type?.color ?? '#4f46e5' }}>
+                              <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: (app.leave_type?.color ?? '#4f46e5') + '15', color: app.leave_type?.color ?? '#4f46e5' }}>
                                 {app.leave_type?.name ?? 'Leave'}
                               </span>
                               <span style={{ fontSize: 11, color: '#94a3b8' }}>
@@ -357,19 +357,19 @@ export default function ParentLeavesManager({
                               </span>
                             </div>
 
-                            <p style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', margin: '0 0 2px' }}>
+                            <p style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', margin: '0 0 2px', wordBreak: 'break-word' }}>
                               {app.student?.full_name ?? '—'}
                             </p>
                             <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 8px' }}>
                               {app.student?.class_name} — Section {app.student?.section} · #{app.student?.roll_number}
                             </p>
 
-                            <div style={{ background: '#f8fafc', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#475569' }}>
+                            <div style={{ background: '#f8fafc', borderRadius: 8, padding: '8px 12px', fontSize: 12.5, color: '#475569', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                               <strong>Reason:</strong> {app.reason}
                             </div>
 
                             {app.remarks && (
-                              <div style={{ background: '#eff6ff', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#1d4ed8', marginTop: 6 }}>
+                              <div style={{ background: '#eff6ff', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#1d4ed8', marginTop: 6, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                                 <strong>Admin remarks:</strong> {app.remarks}
                               </div>
                             )}
@@ -383,7 +383,7 @@ export default function ParentLeavesManager({
                           {/* Cancel button for pending */}
                           {isPending && (
                             <button onClick={() => handleCancel(app.id)} disabled={processing === app.id}
-                              style={{ padding: '6px 14px', border: '1px solid #fecaca', borderRadius: 6, background: '#fef2f2', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', color: '#dc2626', alignSelf: 'center' }}>
+                              style={{ padding: '6px 14px', border: '1px solid #fecaca', borderRadius: 6, background: '#fef2f2', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', color: '#dc2626', alignSelf: 'flex-start' }}>
                               {processing === app.id ? '…' : 'Cancel Request'}
                             </button>
                           )}

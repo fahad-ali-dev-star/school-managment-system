@@ -98,7 +98,7 @@ export default function ParentAlerts({
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div className="responsive-page-container">
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Alerts & Notifications</h1>
@@ -116,8 +116,8 @@ export default function ParentAlerts({
       <div style={{
         display: 'flex', alignItems: 'center', gap: 10,
         background: '#f0fdf4', border: '1px solid #bbf7d0',
-        borderRadius: 10, padding: '10px 16px', marginBottom: '1.5rem',
-        fontSize: 13, color: '#166534',
+        borderRadius: 10, padding: '10px 14px', marginBottom: '1.5rem',
+        fontSize: 12.5, color: '#166534',
       }}>
         <span style={{ fontSize: 18, flexShrink: 0 }}>📢</span>
         <span>
@@ -126,29 +126,29 @@ export default function ParentAlerts({
       </div>
 
       {children_.length === 0 ? (
-        <div className="card" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+        <div className="card" style={{ padding: '2.5rem 1rem', textAlign: 'center', color: '#94a3b8' }}>
           No children linked to your parent account. Please contact school administration.
         </div>
       ) : (
         <>
           {/* Statistics summary */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 100px), 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
             {[
               { label: 'Total Alerts', value: totalCount, color: '#475569', bg: 'white' },
               { label: 'Received', value: deliveredCount, color: '#16a34a', bg: '#f0fdf4' },
               { label: 'Failed', value: failedCount, color: failedCount > 0 ? '#dc2626' : '#64748b', bg: failedCount > 0 ? '#fef2f2' : 'white' },
             ].map((stat, i) => (
-              <div key={i} className="card" style={{ padding: '1rem', background: stat.bg }}>
-                <p style={{ fontSize: 10, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 6px' }}>{stat.label}</p>
-                <p style={{ fontSize: '1.4rem', fontWeight: 700, color: stat.color, margin: 0 }}>{stat.value}</p>
+              <div key={i} className="card" style={{ padding: '0.875rem 1rem', background: stat.bg }}>
+                <p style={{ fontSize: 10, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>{stat.label}</p>
+                <p style={{ fontSize: '1.3rem', fontWeight: 700, color: stat.color, margin: 0 }}>{stat.value}</p>
               </div>
             ))}
           </div>
 
           {/* Filters Bar */}
-          <div className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
-              <div style={{ flex: 1, minWidth: 200 }}>
+          <div className="card" style={{ padding: '1rem', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+              <div style={{ flex: '1 1 180px', minWidth: 0, width: '100%' }}>
                 <input
                   type="text"
                   placeholder="Search alert messages..."
@@ -169,7 +169,7 @@ export default function ParentAlerts({
               </div>
 
               {children_.length > 1 && (
-                <div style={{ minWidth: 150 }}>
+                <div style={{ flex: '1 1 140px', minWidth: 0, width: '100%' }}>
                   <select
                     value={selectedChild}
                     onChange={e => setSelectedChild(e.target.value)}
@@ -181,7 +181,8 @@ export default function ParentAlerts({
                       fontSize: 13,
                       background: '#f8fafc',
                       fontFamily: 'inherit',
-                      outline: 'none'
+                      outline: 'none',
+                      boxSizing: 'border-box'
                     }}
                   >
                     <option value="all">All Children</option>
@@ -194,7 +195,7 @@ export default function ParentAlerts({
                 </div>
               )}
 
-              <div style={{ minWidth: 150 }}>
+              <div style={{ flex: '1 1 140px', minWidth: 0, width: '100%' }}>
                 <select
                   value={selectedType}
                   onChange={e => setSelectedType(e.target.value)}
@@ -206,7 +207,8 @@ export default function ParentAlerts({
                     fontSize: 13,
                     background: '#f8fafc',
                     fontFamily: 'inherit',
-                    outline: 'none'
+                    outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 >
                   <option value="all">All Alert Types</option>
@@ -221,10 +223,10 @@ export default function ParentAlerts({
           </div>
 
           {/* Alerts List */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filteredAlerts.length === 0 ? (
-              <div className="card" style={{ padding: '4rem', textAlign: 'center', color: '#94a3b8' }}>
-                <p style={{ fontSize: 15, fontWeight: 500, margin: '0 0 4px' }}>No alerts match your criteria</p>
+              <div className="card" style={{ padding: '3rem 1rem', textAlign: 'center', color: '#94a3b8' }}>
+                <p style={{ fontSize: 14.5, fontWeight: 500, margin: '0 0 4px', color: '#475569' }}>No alerts match your criteria</p>
                 <p style={{ fontSize: 12, margin: 0 }}>Try adjusting your filters or search query.</p>
               </div>
             ) : (
@@ -232,22 +234,21 @@ export default function ParentAlerts({
                 const colors = getAlertColor(alert.type)
                 const isDelivered = alert.status === 'sent'
 
-
                 return (
                   <div
                     key={alert.id}
                     className="card"
                     style={{
-                      padding: '1.5rem',
+                      padding: '1.15rem',
                       borderLeft: `4px solid ${colors.text}`,
                       transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                     }}
                   >
-                    <div style={{ display: 'flex', gap: 14 }}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                       <div
                         style={{
-                          width: 44,
-                          height: 44,
+                          width: 38,
+                          height: 38,
                           borderRadius: '50%',
                           background: colors.bg,
                           border: `1px solid ${colors.border}`,
@@ -255,7 +256,7 @@ export default function ParentAlerts({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: 20,
+                          fontSize: 18,
                           flexShrink: 0
                         }}
                       >
@@ -263,31 +264,28 @@ export default function ParentAlerts({
                       </div>
 
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8, marginBottom: 6 }}>
-                          <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                             <span
                               style={{
-                                fontSize: 13,
+                                fontSize: 12,
                                 fontWeight: 700,
                                 color: colors.text,
                                 background: colors.bg,
-                                padding: '2px 8px',
+                                padding: '2px 7px',
                                 borderRadius: 6,
-                                marginRight: 8
                               }}
                             >
                               {alert.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                             </span>
                             {alert.student && (
-                              <span style={{ fontSize: 12.5, fontWeight: 600, color: '#475569' }}>
+                              <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>
                                 for {alert.student.full_name} ({alert.student.class_name} - Sec {alert.student.section})
                               </span>
                             )}
                           </div>
-                          <span style={{ fontSize: 12, color: '#94a3b8' }}>
+                          <span style={{ fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap' }}>
                             {new Date(alert.created_at).toLocaleDateString('en-PK', {
-                              weekday: 'short',
-                              year: 'numeric',
                               month: 'short',
                               day: 'numeric',
                               hour: '2-digit',
@@ -296,16 +294,16 @@ export default function ParentAlerts({
                           </span>
                         </div>
 
-                        <p style={{ fontSize: 13.5, color: '#1e293b', margin: '8px 0', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                        <p style={{ fontSize: 13, color: '#1e293b', margin: '6px 0', lineHeight: 1.5, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                           {alert.message}
                         </p>
 
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 10 }}>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>
                           <span
                             style={{
-                              fontSize: 11,
+                              fontSize: 10,
                               fontWeight: 600,
-                              padding: '2px 8px',
+                              padding: '2px 7px',
                               borderRadius: 4,
                               background: '#eef2ff',
                               color: '#4f46e5',
@@ -320,9 +318,9 @@ export default function ParentAlerts({
 
                           <span
                             style={{
-                              fontSize: 11,
+                              fontSize: 10,
                               fontWeight: 600,
-                              padding: '2px 8px',
+                              padding: '2px 7px',
                               borderRadius: 4,
                               background: isDelivered ? '#f0fdf4' : '#fef2f2',
                               color: isDelivered ? '#16a34a' : '#dc2626',

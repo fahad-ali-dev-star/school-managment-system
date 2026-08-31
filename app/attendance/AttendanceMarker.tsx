@@ -162,22 +162,22 @@ export default function AttendanceMarker({ students, classes, initialAttendance,
       </div>
 
       {/* Summary + bulk */}
-      <div className="card" style={{ padding: '1rem 1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <div style={{ display: 'flex', gap: 24 }}>
+      <div className="card" style={{ padding: '0.875rem 1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 16 }}>
           <div>
-            <span style={{ fontSize: 22, fontWeight: 700, color: '#4f46e5' }}>{marked}</span>
-            <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 4 }}>/ {classStudents.length} marked</span>
+            <span style={{ fontSize: 20, fontWeight: 700, color: '#4f46e5' }}>{marked}</span>
+            <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 4 }}>/ {classStudents.length} marked</span>
           </div>
-          <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: 24 }}>
-            <span style={{ fontSize: 22, fontWeight: 700, color: '#16a34a' }}>{present}</span>
-            <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 4 }}>present</span>
+          <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: 16 }}>
+            <span style={{ fontSize: 20, fontWeight: 700, color: '#16a34a' }}>{present}</span>
+            <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 4 }}>present</span>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <span style={{ fontSize: 12, color: '#64748b' }}>Mark all:</span>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 11.5, color: '#64748b' }}>Mark all:</span>
           {(['present', 'absent'] as Status[]).map(s => (
             <button key={s} onClick={() => markAll(s)} style={{
-              padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 500,
+              padding: '4px 10px', borderRadius: 6, fontSize: 11.5, fontWeight: 500,
               background: STATUS[s].bg, color: STATUS[s].color,
               border: `1px solid ${STATUS[s].border}`, cursor: 'pointer', fontFamily: 'inherit',
             }}>{STATUS[s].label}</button>
@@ -188,32 +188,34 @@ export default function AttendanceMarker({ students, classes, initialAttendance,
       {/* Student rows */}
       <div className="card" style={{ overflow: 'hidden', marginBottom: '1.5rem' }}>
         {classStudents.length === 0
-          ? <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No students in {selClass}</div>
+          ? <div style={{ padding: '2.5rem 1rem', textAlign: 'center', color: '#94a3b8' }}>No students in {selClass}</div>
           : classStudents.map((st, i) => {
             const cur = att[st.id] as Status | undefined
             return (
               <div key={st.id} style={{
-                display: 'flex', alignItems: 'center', padding: '11px 16px', gap: 12,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', gap: 10, flexWrap: 'wrap',
                 borderBottom: i < classStudents.length - 1 ? '1px solid #f1f5f9' : 'none',
                 background: cur ? STATUS[cur].bg + '30' : 'white', transition: 'background 0.2s',
               }}>
-                {/* Avatar */}
-                <div style={{
-                  width: 36, height: 36, borderRadius: '50%', background: '#eef2ff',
-                  color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 12, fontWeight: 600, flexShrink: 0,
-                }}>
-                  {st.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontWeight: 500, color: '#0f172a', fontSize: 14 }}>{st.full_name}</p>
-                  <p style={{ margin: 0, fontSize: 11, color: '#94a3b8' }}>#{st.roll_number} · {st.section}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '1 1 180px', minWidth: 0 }}>
+                  {/* Avatar */}
+                  <div style={{
+                    width: 34, height: 34, borderRadius: '50%', background: '#eef2ff',
+                    color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 11.5, fontWeight: 600, flexShrink: 0,
+                  }}>
+                    {st.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ margin: 0, fontWeight: 600, color: '#0f172a', fontSize: 13.5, wordBreak: 'break-word' }}>{st.full_name}</p>
+                    <p style={{ margin: 0, fontSize: 11, color: '#94a3b8' }}>#{st.roll_number} · {st.section}</p>
+                  </div>
                 </div>
                 {/* Buttons */}
                 <div style={{ display: 'flex', gap: 4, flexShrink: 0, flexWrap: 'wrap' }}>
                   {(Object.entries(STATUS) as [Status, typeof STATUS[Status]][]).map(([s, cfg]) => (
                     <button key={s} onClick={() => setAtt(p => ({ ...p, [st.id]: s }))} style={{
-                      padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                      padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600,
                       cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
                       background: cur === s ? cfg.color : 'white',
                       color: cur === s ? 'white' : cfg.color,
@@ -228,9 +230,10 @@ export default function AttendanceMarker({ students, classes, initialAttendance,
       </div>
 
       <button onClick={save} disabled={saving || marked === 0} style={{
-        padding: '11px 28px', borderRadius: 8, border: 'none', cursor: marked === 0 ? 'not-allowed' : 'pointer',
+        padding: '11px 24px', borderRadius: 8, border: 'none', cursor: marked === 0 ? 'not-allowed' : 'pointer',
         background: saved ? '#16a34a' : saving ? '#a5b4fc' : '#4f46e5',
-        color: 'white', fontSize: 14, fontWeight: 600, fontFamily: 'inherit', transition: 'background 0.3s',
+        color: 'white', fontSize: 13.5, fontWeight: 600, fontFamily: 'inherit', transition: 'background 0.3s',
+        width: '100%', maxWidth: 320, display: 'block'
       }}>
         {saved ? '✓ Saved!' : saving ? 'Saving…' : `Save Attendance (${marked} students)`}
       </button>

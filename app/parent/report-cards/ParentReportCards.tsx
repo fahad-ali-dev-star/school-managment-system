@@ -49,27 +49,27 @@ export default function ParentReportCards({
   const activeReport = reportData?.reports?.[0]
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div className="responsive-page-container">
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Report Cards</h1>
         <p style={{ color: '#64748b', fontSize: 13, marginTop: 3 }}>View and download your child&apos;s result cards</p>
       </div>
 
       {children_.length === 0 ? (
-        <div className="card" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+        <div className="card" style={{ padding: '2.5rem 1rem', textAlign: 'center', color: '#94a3b8' }}>
           No children linked to your account. Contact the school admin.
         </div>
       ) : (
         <>
           {/* Selectors */}
           <div className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: 12 }}>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 5 }}>Select Child</label>
                 <select
                   value={selectedChild}
                   onChange={e => { setSelectedChild(e.target.value); setSelectedExam(''); setReportData(null) }}
-                  style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #e2e8f0', borderRadius: 8, fontSize: 13, background: '#f8fafc', fontFamily: 'inherit' }}
+                  style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #e2e8f0', borderRadius: 8, fontSize: 13, background: '#f8fafc', fontFamily: 'inherit', boxSizing: 'border-box' }}
                 >
                   {children_.map(c => (
                     <option key={c.id} value={c.id}>{c.full_name} — {c.class_name} Sec {c.section}</option>
@@ -81,7 +81,7 @@ export default function ParentReportCards({
                 <select
                   value={selectedExam}
                   onChange={e => { setSelectedExam(e.target.value); loadReport(e.target.value) }}
-                  style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #e2e8f0', borderRadius: 8, fontSize: 13, background: '#f8fafc', fontFamily: 'inherit' }}
+                  style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #e2e8f0', borderRadius: 8, fontSize: 13, background: '#f8fafc', fontFamily: 'inherit', boxSizing: 'border-box' }}
                 >
                   <option value="">Choose exam…</option>
                   {availableExams.map(e => (
@@ -95,10 +95,10 @@ export default function ParentReportCards({
             )}
           </div>
 
-          {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '12px 16px', color: '#dc2626', fontSize: 13, marginBottom: '1rem' }}>⚠ {error}</div>}
+          {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', color: '#dc2626', fontSize: 13, marginBottom: '1rem' }}>⚠ {error}</div>}
 
           {loading && (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94a3b8' }}>
               <div style={{ width: 36, height: 36, border: '3px solid #e2e8f0', borderTop: '3px solid #7c3aed', borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto 12px' }} />
               Loading report…
               <style>{`@keyframes spin { to { transform:rotate(360deg) } }`}</style>
@@ -120,8 +120,8 @@ export default function ParentReportCards({
 
               {/* Preview */}
               <div className="card" style={{ overflow: 'hidden' }}>
-                <div style={{ background: '#7c3aed', padding: '1.25rem', textAlign: 'center' }}>
-                  <p style={{ fontSize: 18, fontWeight: 700, color: 'white', margin: '0 0 2px' }}>{reportData.school.name.toUpperCase()}</p>
+                <div style={{ background: '#7c3aed', padding: '1.25rem 1rem', textAlign: 'center' }}>
+                  <p style={{ fontSize: 17, fontWeight: 700, color: 'white', margin: '0 0 2px' }}>{reportData.school.name.toUpperCase()}</p>
                   <p style={{ fontSize: 11, color: '#ddd6fe', margin: 0 }}>
                     {reportData.school.address} {reportData.school.phone ? `  |  ${reportData.school.phone}` : ''}
                   </p>
@@ -129,8 +129,8 @@ export default function ParentReportCards({
                 </div>
 
                 <div style={{ padding: '1.25rem', borderBottom: '1px solid #f1f5f9' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', alignItems: 'start' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px', fontSize: 13 }}>
+                  <div className="result-card-info-grid">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))', gap: '8px 16px', fontSize: 13, width: '100%' }}>
                       {[
                         ['Student', activeReport.student.full_name],
                         ['Roll No', activeReport.student.roll_number],
@@ -145,9 +145,9 @@ export default function ParentReportCards({
                         </div>
                       ))}
                     </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ width: 72, height: 72, borderRadius: '50%', background: gradeColor(activeReport.overallGrade), display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ fontSize: 22, fontWeight: 700, color: 'white' }}>{activeReport.overallGrade}</span>
+                    <div style={{ textAlign: 'center', marginTop: 4 }}>
+                      <div style={{ width: 68, height: 68, borderRadius: '50%', background: gradeColor(activeReport.overallGrade), display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                        <span style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{activeReport.overallGrade}</span>
                       </div>
                       <p style={{ fontSize: 11, color: '#64748b', margin: '4px 0 0' }}>{activeReport.totalObtained}/{activeReport.totalPossible}</p>
                       <p style={{ fontSize: 11, fontWeight: 700, color: activeReport.passed ? '#16a34a' : '#dc2626', margin: '2px 0 0' }}>{activeReport.passed ? '✓ PASS' : '✗ FAIL'}</p>
@@ -155,40 +155,42 @@ export default function ParentReportCards({
                   </div>
                 </div>
 
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                  <thead>
-                    <tr style={{ background: '#7c3aed' }}>
-                      {['Subject', 'Max', 'Obtained', '%', 'Grade', 'Result'].map(h => (
-                        <th key={h} style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'white', fontSize: 12 }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeReport.subjectMarks.map((sm: any, i: number) => (
-                      <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 ? '#fafafa' : 'white' }}>
-                        <td style={{ padding: '10px 12px', fontWeight: 500 }}>{sm.subject}</td>
-                        <td style={{ padding: '10px 12px', color: '#64748b' }}>{sm.total_marks}</td>
-                        <td style={{ padding: '10px 12px', fontWeight: 600 }}>{sm.obtained !== null ? sm.obtained : '—'}</td>
-                        <td style={{ padding: '10px 12px', color: '#64748b' }}>{sm.obtained !== null ? `${Math.round((sm.obtained / sm.total_marks) * 100)}%` : '—'}</td>
-                        <td style={{ padding: '10px 12px' }}>{sm.grade && <span style={{ fontWeight: 700, color: gradeColor(sm.grade) }}>{sm.grade}</span>}</td>
-                        <td style={{ padding: '10px 12px' }}>{sm.passed !== null && <span style={{ fontSize: 11, fontWeight: 700, color: sm.passed ? '#16a34a' : '#dc2626' }}>{sm.passed ? 'PASS' : 'FAIL'}</span>}</td>
+                <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                  <table style={{ width: '100%', minWidth: 480, borderCollapse: 'collapse', fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: '#7c3aed' }}>
+                        {['Subject', 'Max', 'Obtained', '%', 'Grade', 'Result'].map(h => (
+                          <th key={h} style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'white', fontSize: 12 }}>{h}</th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {activeReport.subjectMarks.map((sm: any, i: number) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 ? '#fafafa' : 'white' }}>
+                          <td style={{ padding: '9px 12px', fontWeight: 500 }}>{sm.subject}</td>
+                          <td style={{ padding: '9px 12px', color: '#64748b' }}>{sm.total_marks}</td>
+                          <td style={{ padding: '9px 12px', fontWeight: 600 }}>{sm.obtained !== null ? sm.obtained : '—'}</td>
+                          <td style={{ padding: '9px 12px', color: '#64748b' }}>{sm.obtained !== null ? `${Math.round((sm.obtained / sm.total_marks) * 100)}%` : '—'}</td>
+                          <td style={{ padding: '9px 12px' }}>{sm.grade && <span style={{ fontWeight: 700, color: gradeColor(sm.grade) }}>{sm.grade}</span>}</td>
+                          <td style={{ padding: '9px 12px' }}>{sm.passed !== null && <span style={{ fontSize: 11, fontWeight: 700, color: sm.passed ? '#16a34a' : '#dc2626' }}>{sm.passed ? 'PASS' : 'FAIL'}</span>}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
                 <div style={{ padding: '1.25rem', borderTop: '1px solid #f1f5f9' }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: '0 0 10px' }}>Attendance Summary</p>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 70px), 1fr))', gap: 8 }}>
                     {[
                       { label: 'Total Days', value: activeReport.attendance.totalDays,    bg: '#f8fafc', color: '#475569' },
                       { label: 'Present',    value: activeReport.attendance.presentDays,  bg: '#f0fdf4', color: '#16a34a' },
                       { label: 'Absent',     value: activeReport.attendance.absentDays,   bg: '#fef2f2', color: '#dc2626' },
                       { label: 'Rate',       value: `${activeReport.attendance.attPercent}%`, bg: activeReport.attendance.attPercent >= 75 ? '#f0fdf4' : '#fef2f2', color: activeReport.attendance.attPercent >= 75 ? '#16a34a' : '#dc2626' },
                     ].map((a, i) => (
-                      <div key={i} style={{ background: a.bg, borderRadius: 8, padding: '10px 16px', textAlign: 'center', flex: 1, minWidth: 70 }}>
-                        <p style={{ fontSize: 18, fontWeight: 700, color: a.color, margin: 0 }}>{a.value}</p>
-                        <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0' }}>{a.label}</p>
+                      <div key={i} style={{ background: a.bg, borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                        <p style={{ fontSize: 16, fontWeight: 700, color: a.color, margin: 0 }}>{a.value}</p>
+                        <p style={{ fontSize: 10.5, color: '#94a3b8', margin: '2px 0 0' }}>{a.label}</p>
                       </div>
                     ))}
                   </div>

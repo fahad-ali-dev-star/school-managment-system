@@ -215,3 +215,47 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Report cards 2-col layout that collapses on mobile */
+.report-cards-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .report-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Portal 2-column grid for holidays and assignments */
+.portal-2col-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .portal-2col-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Responsive Result Card Student Info */
+.result-card-info-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 600px) {
+  .result-card-info-grid {
+    grid-template-columns: 1fr !important;
+    justify-items: center;
+    text-align: center;
+  }
+}
+

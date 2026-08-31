@@ -38,14 +38,14 @@ export default function ChangePasswordForm({ email, role }: { email: string; rol
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 480 }}>
+    <div className="responsive-page-container" style={{ maxWidth: 480 }}>
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>My Account</h1>
         <p style={{ color: '#64748b', fontSize: 13, marginTop: 3 }}>Update your password</p>
       </div>
 
-      <div className="card" style={{ padding: '1.75rem' }}>
-        <div style={{ background: accentBg, borderRadius: 8, padding: '10px 14px', marginBottom: '1.5rem' }}>
+      <div className="card" style={{ padding: '1.25rem' }}>
+        <div style={{ background: accentBg, borderRadius: 8, padding: '10px 14px', marginBottom: '1.25rem' }}>
           <p style={{ fontSize: 13, color: accent, margin: 0 }}>
             <strong>Logged in as:</strong> {email}
           </p>

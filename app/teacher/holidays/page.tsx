@@ -57,24 +57,24 @@ export default async function TeacherHolidaysPage() {
   const firstName = profile.full_name.split(' ')[0]
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 1100 }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>🏖️ Holiday Hub</h1>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: '1.5rem' }}>Hi {firstName}! Manage holiday homework and study materials for your students.</p>
+    <div className="responsive-page-container" style={{ maxWidth: 1100 }}>
+      <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>🏖️ Holiday Hub</h1>
+      <p style={{ color: '#64748b', fontSize: 13, marginBottom: '1.25rem' }}>Hi {firstName}! Manage holiday homework and study materials for your students.</p>
 
       {/* Quick actions */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: '2rem', flexWrap: 'wrap' }}>
-        <Link href="/holidays" style={{ padding: '10px 18px', borderRadius: 8, background: '#eef2ff', color: '#4f46e5', fontWeight: 600, fontSize: 14, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, border: '1px solid #c7d2fe' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 160px), 1fr))', gap: 8, marginBottom: '1.5rem' }}>
+        <Link href="/holidays" style={{ padding: '9px 14px', borderRadius: 8, background: '#eef2ff', color: '#4f46e5', fontWeight: 600, fontSize: 13, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, border: '1px solid #c7d2fe', textAlign: 'center' }}>
           📅 View Full Calendar
         </Link>
-        <Link href="/holidays/homework" style={{ padding: '10px 18px', borderRadius: 8, background: '#f0fdf4', color: '#16a34a', fontWeight: 600, fontSize: 14, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, border: '1px solid #bbf7d0' }}>
+        <Link href="/holidays/homework" style={{ padding: '9px 14px', borderRadius: 8, background: '#f0fdf4', color: '#16a34a', fontWeight: 600, fontSize: 13, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, border: '1px solid #bbf7d0', textAlign: 'center' }}>
           📝 Manage Homework
         </Link>
-        <Link href="/holidays/materials" style={{ padding: '10px 18px', borderRadius: 8, background: '#fffbeb', color: '#d97706', fontWeight: 600, fontSize: 14, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, border: '1px solid #fde68a' }}>
+        <Link href="/holidays/materials" style={{ padding: '9px 14px', borderRadius: 8, background: '#fffbeb', color: '#d97706', fontWeight: 600, fontSize: 13, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, border: '1px solid #fde68a', textAlign: 'center' }}>
           📚 Study Materials
         </Link>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <div className="portal-2col-grid">
         {/* Upcoming Holidays */}
         <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #f1f5f9', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -88,15 +88,15 @@ export default async function TeacherHolidaysPage() {
               const t = HOLIDAY_TYPES[h.type] ?? HOLIDAY_TYPES.national
               return (
                 <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 8px', borderRadius: 8, marginBottom: 4 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 8, background: t.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{t.emoji}</div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: 0 }}>{h.title}</p>
+                  <div style={{ width: 38, height: 38, borderRadius: 8, background: t.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{t.emoji}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: 0, wordBreak: 'break-word' }}>{h.title}</p>
                     <p style={{ fontSize: 11, color: '#64748b', margin: '2px 0 0' }}>
                       {new Date(h.date + 'T00:00:00').toLocaleDateString('en-PK', { weekday: 'short', day: 'numeric', month: 'short' })}
                       {h.end_date && h.end_date !== h.date ? ` — ${new Date(h.end_date + 'T00:00:00').toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}` : ''}
                     </p>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: t.bg, color: t.color, whiteSpace: 'nowrap' }}>{t.label}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: t.bg, color: t.color, whiteSpace: 'nowrap', flexShrink: 0 }}>{t.label}</span>
                 </div>
               )
             })}
@@ -107,7 +107,7 @@ export default async function TeacherHolidaysPage() {
         <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #f1f5f9', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', margin: 0 }}>📝 My Homework Assignments</h2>
-            <Link href="/holidays/homework" style={{ fontSize: 12, color: '#4f46e5', textDecoration: 'none', fontWeight: 600 }}>View All →</Link>
+            <Link href="/holidays/homework" style={{ fontSize: 12, color: '#4f46e5', textDecoration: 'none', fontWeight: 600, flexShrink: 0 }}>View All →</Link>
           </div>
           <div style={{ padding: '0.75rem', maxHeight: 320, overflowY: 'auto' }}>
             {myHomework.length === 0 ? (
@@ -119,12 +119,12 @@ export default async function TeacherHolidaysPage() {
               const now = new Date().toISOString().split('T')[0]
               const overdue = h.due_date < now
               return (
-                <div key={h.id} style={{ padding: '10px 8px', borderRadius: 8, marginBottom: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.title}</p>
+                <div key={h.id} style={{ padding: '10px 8px', borderRadius: 8, marginBottom: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 120 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: 0, wordBreak: 'break-word' }}>{h.title}</p>
                     <p style={{ fontSize: 11, color: '#64748b', margin: '2px 0 0' }}>{h.class_name} · {h.subject}</p>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: overdue ? '#fef2f2' : '#f0fdf4', color: overdue ? '#dc2626' : '#16a34a', whiteSpace: 'nowrap' }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: overdue ? '#fef2f2' : '#f0fdf4', color: overdue ? '#dc2626' : '#16a34a', whiteSpace: 'nowrap', flexShrink: 0 }}>
                     {overdue ? 'Overdue' : `Due ${new Date(h.due_date + 'T00:00:00').toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}`}
                   </span>
                 </div>
@@ -137,9 +137,9 @@ export default async function TeacherHolidaysPage() {
         <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', gridColumn: '1 / -1' }}>
           <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #f1f5f9', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', margin: 0 }}>📚 My Study Materials</h2>
-            <Link href="/holidays/materials" style={{ fontSize: 12, color: '#4f46e5', textDecoration: 'none', fontWeight: 600 }}>Manage →</Link>
+            <Link href="/holidays/materials" style={{ fontSize: 12, color: '#4f46e5', textDecoration: 'none', fontWeight: 600, flexShrink: 0 }}>Manage →</Link>
           </div>
-          <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px,1fr))', gap: 8 }}>
+          <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 240px), 1fr))', gap: 8 }}>
             {myMaterials.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '1.5rem', gridColumn: '1 / -1' }}>
                 <p style={{ color: '#94a3b8', fontSize: 13 }}>No materials uploaded yet</p>
@@ -149,9 +149,9 @@ export default async function TeacherHolidaysPage() {
               const icons: Record<string, string> = { pdf: '📄', video: '🎬', link: '🔗', note: '📝' }
               return (
                 <div key={m.id} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #f1f5f9', background: '#fafafa', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 20 }}>{icons[m.type] ?? '📄'}</span>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>{icons[m.type] ?? '📄'}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.title}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: 0, wordBreak: 'break-word' }}>{m.title}</p>
                     <p style={{ fontSize: 11, color: '#64748b', margin: '2px 0 0' }}>{m.class_name} · {m.subject}</p>
                   </div>
                 </div>

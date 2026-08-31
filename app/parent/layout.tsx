@@ -24,7 +24,7 @@ export default async function ParentPortalLayout({ children }: { children: React
       <Sidebar user={authUser} />
       <main style={{ flex: 1, overflow: 'auto', background: '#f8fafc' }}>
         <ParentNotificationListener userEmail={profile.email} />
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.25rem 1.5rem 0' }}>
+        <div className="responsive-page-container" style={{ paddingBottom: 0, paddingTop: '1rem' }}>
           <PushNotificationPrompt userEmail={profile.email} />
         </div>
         {children}
