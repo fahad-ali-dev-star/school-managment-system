@@ -21,9 +21,9 @@ export default async function FeesPage() {
       supabase.from('fees')
         .select('*, students(full_name, roll_number, class_name)')
         .eq('school_id', profile.school_id)
-        .order('created_at', { ascending: false }).limit(200),
+        .order('created_at', { ascending: false }).limit(1000),
       supabase.from('students')
-        .select('id, full_name, roll_number, class_name, fee_status')
+        .select('id, full_name, roll_number, class_name, fee_status, monthly_fee')
         .eq('school_id', profile.school_id).eq('is_active', true).order('class_name'),
     ])
     fees = feesRes.data ?? []
