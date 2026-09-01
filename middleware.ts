@@ -66,6 +66,31 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  // Skip intro/landing page for logged-in users — redirect to their dashboard
+  if (user && pathname === '/') {
+    try {
+      const roleCookie = request.cookies.get('user-role')?.value
+      if (roleCookie) {
+        const dest = roleCookie === 'teacher' ? '/teacher' : roleCookie === 'parent' ? '/parent' : '/dashboard'
+        return NextResponse.redirect(new URL(dest, request.url))
+      }
+      // No role cookie cached — fetch from DB
+      const { data: profile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+      if (profile?.role) {
+        const dest = profile.role === 'teacher' ? '/teacher' : profile.role === 'parent' ? '/parent' : '/dashboard'
+        const redirectRes = NextResponse.redirect(new URL(dest, request.url))
+        redirectRes.cookies.set('user-role', profile.role, { path: '/', maxAge: 60 * 60 * 24 * 7 })
+        return redirectRes
+      }
+    } catch {
+      console.log('Middleware: Offline during root redirect — showing landing page.')
+    }
+  }
+
   if (user && isLogin) {
     console.log('Middleware: User on /login, fetching role for redirect...')
     try {
