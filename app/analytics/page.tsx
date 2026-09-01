@@ -1,7 +1,12 @@
 import { redirect } from 'next/navigation'
-import AnalyticsDashboard from './AnalyticsDashboard'
+import dynamic from 'next/dynamic'
+import Loading from '@/components/Loading'
 import { getProfile } from '@/lib/supabase/getProfile'
 import { createClient } from '@/lib/supabase/server'
+
+const AnalyticsDashboard = dynamic(() => import('./AnalyticsDashboard'), {
+  loading: () => <Loading />,
+})
 
 export default async function AnalyticsPage() {
   const profile = await getProfile()

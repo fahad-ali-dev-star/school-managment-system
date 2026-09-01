@@ -1,4 +1,4 @@
-import { jsPDF } from 'jspdf'
+// Dynamic lazy-loading of jsPDF to optimize initial bundle size
 
 interface SubjectMark {
   subject: string
@@ -62,7 +62,8 @@ function gradeColor(grade: string): [number, number, number] {
   return [220, 38, 38]                                          // red
 }
 
-export function generateReportCardPDF(data: ReportData, singleStudent?: string): void {
+export async function generateReportCardPDF(data: ReportData, singleStudent?: string): Promise<void> {
+  const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const W = 210 // A4 width mm
   const H = 297 // A4 height mm
