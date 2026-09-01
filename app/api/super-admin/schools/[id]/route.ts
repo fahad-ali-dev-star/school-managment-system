@@ -7,7 +7,6 @@ function isAuthorized(req: NextRequest): boolean {
     ?? new URL(req.url).searchParams.get('key')
   const validKey = process.env.SUPER_ADMIN_KEY
     ?? process.env.SUPER_ADMIN_SECRET
-    ?? process.env.NEXT_PUBLIC_SUPER_ADMIN_KEY
   return !!secret && !!validKey && secret === validKey
 }
 

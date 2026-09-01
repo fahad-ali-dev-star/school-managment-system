@@ -20,7 +20,6 @@ export async function GET(request: Request) {
     const secret = searchParams.get('secret')
     const validKey = process.env.SUPER_ADMIN_KEY
       ?? process.env.SUPER_ADMIN_SECRET
-      ?? process.env.NEXT_PUBLIC_SUPER_ADMIN_KEY
     if (!secret || !validKey || secret !== validKey) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

@@ -1,27 +1,20 @@
 import webpush from 'web-push'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
-// ─── Default / Fallback VAPID Keys ─────────────────────────────────────────────
-// Used for immediate development and production if env vars are not yet configured.
-const DEFAULT_VAPID_PUBLIC =
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
-  'BHUFarnsN-tV7cgp7jG5O9gDwr4tkxTiF8VZhosEvJixAM1WlgrfUSLWwungpkBSdkgpr2YW4q_3fNpngaCubnw'
-const DEFAULT_VAPID_PRIVATE =
-  process.env.VAPID_PRIVATE_KEY ||
-  'sRhvlJhCJqsgmqTWWWzhUQMyPku67HqSK0QzQk1FS3M'
-const DEFAULT_VAPID_SUBJECT =
-  process.env.VAPID_SUBJECT || 'mailto:admin@beaconlight.edu.pk'
+const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || ''
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@school.com'
 
 let isConfigured = false
 
 function ensureVapidConfig() {
   if (!isConfigured) {
+    if (!VAPID_PUBLIC || !VAPID_PRIVATE) {
+      console.warn('[WebPush] VAPID keys not configured in environment variables.')
+      return
+    }
     try {
-      const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC
-      const priv = process.env.VAPID_PRIVATE_KEY || DEFAULT_VAPID_PRIVATE
-      const sub = process.env.VAPID_SUBJECT || DEFAULT_VAPID_SUBJECT
-
-      webpush.setVapidDetails(sub, pub, priv)
+      webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
       isConfigured = true
     } catch (err) {
       console.error('[WebPush] Failed to set VAPID details:', err)
@@ -30,7 +23,7 @@ function ensureVapidConfig() {
 }
 
 export function getVapidPublicKey(): string {
-  return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC
+  return VAPID_PUBLIC
 }
 
 export interface PushPayload {

@@ -1,14 +1,37 @@
 // Script to push holiday_management.sql to Supabase
 // Uses the Supabase Management REST API with service role key
 
-import { readFileSync } from 'fs'
-import { join, dirname } from 'path'
+import { readFileSync, existsSync } from 'fs'
+import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-const SUPABASE_URL = 'https://kvwtlunyunnswvijqifi.supabase.co'
-const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2d3RsdW55dW5uc3d2aWpxaWZpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODc4NzYzMCwiZXhwIjoyMDk0MzYzNjMwfQ.wo9FM9AcH7FJ6jHH-5SeOls05bIz83nEKgVOn9gZZsU'
+// Simple env loader from .env.local / process.env
+function loadEnv() {
+  const envPath = resolve(__dirname, '../.env.local')
+  const env = { ...process.env }
+  if (existsSync(envPath)) {
+    const content = readFileSync(envPath, 'utf8')
+    content.split('\n').forEach(line => {
+      if (!line || line.startsWith('#')) return
+      const [key, ...value] = line.split('=')
+      if (key && value) {
+        env[key.trim()] = value.join('=').trim().replace(/^"|"$/g, '')
+      }
+    })
+  }
+  return env
+}
+
+const env = loadEnv()
+const SUPABASE_URL = env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL
+const SERVICE_ROLE_KEY = env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  console.error('❌ Error: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not configured.')
+  process.exit(1)
+}
 
 // Read the SQL file
 const sqlFile = join(__dirname, '..', 'lib', 'supabase', 'holiday_management.sql')
