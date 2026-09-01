@@ -74,9 +74,16 @@ export default function FeesManager({ fees: init, students: initStudents, school
     const finalStatus = isZero ? 'paid' : form.status
     const finalPaidDate = finalStatus === 'paid' ? (form.paid_date || now.toISOString().split('T')[0]) : null
 
+    // Check if an existing fee record exists for this student, month and fee_type
+    const targetExistingFee = editingFee || fees.find(f =>
+      f.student_id === form.student_id &&
+      (f.month || '').trim().toLowerCase() === (form.month || '').trim().toLowerCase() &&
+      f.fee_type === form.fee_type
+    )
+
     if (isOffline()) {
-      const feeId = editingFee ? editingFee.id : generateUUID()
-      const receipt = editingFee ? editingFee.receipt_number : 'RCP-' + Date.now().toString(36).toUpperCase()
+      const feeId = targetExistingFee ? targetExistingFee.id : generateUUID()
+      const receipt = targetExistingFee ? targetExistingFee.receipt_number : 'RCP-' + Date.now().toString(36).toUpperCase()
       const now = new Date()
       const feeRecord = {
         id: feeId,
@@ -91,11 +98,11 @@ export default function FeesManager({ fees: init, students: initStudents, school
         payment_method: form.payment_method,
         receipt_number: receipt,
         notes: form.notes || null,
-        created_at: editingFee ? editingFee.created_at : now.toISOString(),
+        created_at: targetExistingFee ? targetExistingFee.created_at : now.toISOString(),
         students: students.find(s => s.id === form.student_id) || null
       }
 
-      if (editingFee) {
+      if (targetExistingFee) {
         queueOfflineMutation({
           type: 'supabase',
           target: 'fees',
@@ -153,11 +160,11 @@ export default function FeesManager({ fees: init, students: initStudents, school
       return
     }
 
-    if (editingFee) {
+    if (targetExistingFee) {
       const { data, error } = await supabase.from('fees').update({
         ...form, amount: amountVal, status: finalStatus,
         paid_date: finalPaidDate,
-      }).eq('id', editingFee.id).select('*, students(full_name, roll_number, class_name)').single()
+      }).eq('id', targetExistingFee.id).select('*, students(full_name, roll_number, class_name)').single()
       
       if (!error && data) {
         setFees(p => p.map(f => f.id === data.id ? data : f))
@@ -470,9 +477,18 @@ export default function FeesManager({ fees: init, students: initStudents, school
                       <td style={{ padding: '11px 14px' }}>
                         <button
                           onClick={() => {
-                            setEditingFee(null)
-                            setForm(f => ({ ...f, student_id: s.id, status: (s as any).fee_status }))
-                            setShowForm(true)
+                            const existingCurrentFee = fees.find(f =>
+                              f.student_id === s.id &&
+                              (f.month || '').trim().toLowerCase() === currentMonthLabel.trim().toLowerCase() &&
+                              f.fee_type === 'monthly'
+                            )
+                            if (existingCurrentFee) {
+                              openEdit(existingCurrentFee)
+                            } else {
+                              setEditingFee(null)
+                              setForm(f => ({ ...f, student_id: s.id, status: (s as any).fee_status || 'paid', month: currentMonthLabel }))
+                              setShowForm(true)
+                            }
                           }}
                           style={{ background: '#4f46e5', color: 'white', border: 'none', borderRadius: 6, padding: '5px 12px', fontSize: 11, cursor: 'pointer' }}
                         >
