@@ -16,14 +16,47 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const { data: profile } = await supabase
+    .from('users').select('school_id, role').eq('id', user.id).single()
+  if (!profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Verify exam belongs to user's school
+  const { data: exam } = await supabase
+    .from('exams')
+    .select('id, class_name, section')
+    .eq('id', params.id)
+    .eq('school_id', profile.school_id)
+    .single()
+
+  if (!exam) return NextResponse.json({ error: 'Exam not found' }, { status: 404 })
+
   const subjectId = new URL(req.url).searchParams.get('subject_id')
 
   let query = supabase
     .from('marks')
-    .select('*, students(full_name, roll_number), subjects(name, total_marks)')
+    .select('*, students!inner(full_name, roll_number, class_name, section, parent_email), subjects(name, total_marks)')
     .eq('exam_id', params.id)
+    .eq('school_id', profile.school_id)
 
   if (subjectId) query = query.eq('subject_id', subjectId)
+
+  if (profile.role === 'parent') {
+    query = query.eq('students.parent_email', user.email!)
+  } else if (profile.role === 'teacher') {
+    const { data: teacherRow } = await supabase.from('teachers')
+      .select('class_assigned').eq('email', user.email!).eq('school_id', profile.school_id).single()
+    if (teacherRow?.class_assigned) {
+      const { parseAllClassesAssigned } = await import('@/lib/teacherAccess')
+      const classes = parseAllClassesAssigned(teacherRow.class_assigned)
+      const isAllowed = classes.some(c => 
+        c.class_name === exam.class_name && 
+        (!c.section || c.section === exam.section)
+      )
+      if (!isAllowed) {
+        return NextResponse.json({ error: 'Forbidden: not your class' }, { status: 403 })
+      }
+    }
+  }
 
   const { data, error } = await query.order('created_at')
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

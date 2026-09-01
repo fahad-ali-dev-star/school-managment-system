@@ -18,10 +18,10 @@ interface School {
 function SuperAdminContent() {
   const searchParams = useSearchParams()
   const key = searchParams.get('key')
-  const isValid = key === process.env.NEXT_PUBLIC_SUPER_ADMIN_KEY
 
   const [schools, setSchools] = useState<School[]>([])
   const [loading, setLoading] = useState(true)
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(key ? null : false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingSchool, setEditingSchool] = useState<School | null>(null)
   
@@ -37,23 +37,36 @@ function SuperAdminContent() {
   })
 
   useEffect(() => {
-    if (isValid) fetchSchools()
-  }, [isValid])
+    if (key) {
+      fetchSchools()
+    } else {
+      setIsAuthorized(false)
+      setLoading(false)
+    }
+  }, [key])
 
   const fetchSchools = async () => {
     try {
-      const res = await fetch(`/api/super-admin/schools?key=${key}`)
+      const res = await fetch(`/api/super-admin/schools?key=${encodeURIComponent(key || '')}`)
+      if (!res.ok) {
+        setIsAuthorized(false)
+        setSchools([])
+        return
+      }
       const data = await res.json()
       
       // Ensure we only set schools if the data is an array
       if (Array.isArray(data)) {
+        setIsAuthorized(true)
         setSchools(data)
       } else {
         console.error('API Error:', data.error)
+        setIsAuthorized(false)
         setSchools([])
       }
     } catch (err) {
       console.error('Failed to fetch schools')
+      setIsAuthorized(false)
       setSchools([])
     } finally {
       setLoading(false)
@@ -64,7 +77,7 @@ function SuperAdminContent() {
     e.preventDefault()
     setLoading(true)
     try {
-      const res = await fetch(`/api/super-admin/schools?key=${key}`, {
+      const res = await fetch(`/api/super-admin/schools?key=${encodeURIComponent(key || '')}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -90,7 +103,7 @@ function SuperAdminContent() {
     if (!confirm(`Are you sure you want to delete ${name}? This will remove all associated users and data.`)) return
     
     try {
-      const res = await fetch(`/api/super-admin/schools/${id}?key=${key}`, { method: 'DELETE' })
+      const res = await fetch(`/api/super-admin/schools/${id}?key=${encodeURIComponent(key || '')}`, { method: 'DELETE' })
       if (res.ok) {
         setSchools(schools.filter(s => s.id !== id))
       } else {
@@ -102,7 +115,7 @@ function SuperAdminContent() {
     }
   }
 
-  if (!isValid) {
+  if (isAuthorized === false) {
     return (
       <div className="admin-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="stat-card" style={{ maxWidth: 400, textAlign: 'center' }}>

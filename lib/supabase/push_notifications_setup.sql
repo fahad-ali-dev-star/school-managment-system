@@ -40,6 +40,6 @@ CREATE POLICY "Users can view their own push subscriptions"
 DROP POLICY IF EXISTS "Users can delete their own push subscriptions" ON public.push_subscriptions;
 CREATE POLICY "Users can delete their own push subscriptions"
   ON public.push_subscriptions FOR DELETE
-  USING (auth.uid() = user_id OR endpoint = endpoint);
+  USING (auth.uid() = user_id);
 
 -- Service role bypasses RLS automatically to fetch & prune tokens during push dispatch

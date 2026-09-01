@@ -4,38 +4,19 @@ import { createClient } from './server'
 
 export const getProfile = cache(async () => {
   try {
-    const cookieStore = cookies()
-    const cachedProfileStr = cookieStore.get('user-profile')?.value
-    if (cachedProfileStr) {
-      try {
-        const cachedProfile = JSON.parse(cachedProfileStr)
-        console.log('getProfile: Returning cached profile from cookie:', cachedProfile.full_name)
-        return cachedProfile
-      } catch (e) {
-        console.warn('getProfile: Failed to parse user-profile cookie', e)
-      }
-    }
-
     const supabase = createClient()
 
-    // Try getUser() first (authenticates with Supabase Auth server).
-    // If it fails due to a network error, fall back to getSession() which
-    // reads the JWT directly from cookies — no network round-trip required.
-    // This prevents an infinite redirect loop when the Supabase Auth server
-    // is temporarily unreachable: getUser() throws → layout redirects to /login
-    // → middleware redirects back to the portal → repeat.
+    // 1. Always verify the active session/user first
     let user: any = null
     try {
       const { data, error } = await supabase.auth.getUser()
-      if (!error) {
+      if (!error && data?.user) {
         user = data.user
       } else {
-        console.warn('getProfile: getUser() returned error, falling back to getSession():', error.message)
         const { data: sessionData } = await supabase.auth.getSession()
         user = sessionData.session?.user ?? null
       }
     } catch (authErr: any) {
-      console.warn('getProfile: getUser() threw, falling back to getSession():', authErr?.message)
       try {
         const { data: sessionData } = await supabase.auth.getSession()
         user = sessionData.session?.user ?? null
@@ -45,12 +26,24 @@ export const getProfile = cache(async () => {
     }
 
     if (!user) {
-      console.log('getProfile: No auth user found')
       return null
     }
 
-    console.log('getProfile: Fetching profile from DB for user', user.id)
+    // 2. Optional fast path: check cached cookie ONLY IF it matches verified user id
+    const cookieStore = cookies()
+    const cachedProfileStr = cookieStore.get('user-profile')?.value
+    if (cachedProfileStr) {
+      try {
+        const cachedProfile = JSON.parse(cachedProfileStr)
+        if (cachedProfile && cachedProfile.id === user.id) {
+          return cachedProfile
+        }
+      } catch (e) {
+        console.warn('getProfile: Failed to parse user-profile cookie', e)
+      }
+    }
 
+    // 3. Fetch verified profile row from DB for this authenticated user ID
     const { data: profile, error } = await supabase
       .from('users')
       .select(`
@@ -72,14 +65,11 @@ export const getProfile = cache(async () => {
     }
 
     if (!profile) {
-      console.log('getProfile: No profile row found')
       return null
     }
 
     const schoolData = (profile as any).schools
     const currentPlan = schoolData?.plan ?? 'free'
-
-    console.log('getProfile: Profile found for', profile.full_name, '| Plan:', currentPlan)
 
     return {
       ...profile,
@@ -87,7 +77,6 @@ export const getProfile = cache(async () => {
       plan: currentPlan
     }
   } catch (err: any) {
-    // Network unreachable (offline) — return null gracefully instead of crashing.
     console.warn('getProfile: Network error (possibly offline):', err?.message ?? err)
     return null
   }

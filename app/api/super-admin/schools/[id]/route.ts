@@ -1,12 +1,14 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 
-// Authorization check using our Super Admin Key
+// Authorization check using our Super Admin Key (server-side only)
 function isAuthorized(req: NextRequest): boolean {
   const secret = req.headers.get('x-super-admin-key')
     ?? new URL(req.url).searchParams.get('key')
-  
-  return secret === process.env.NEXT_PUBLIC_SUPER_ADMIN_KEY
+  const validKey = process.env.SUPER_ADMIN_KEY
+    ?? process.env.SUPER_ADMIN_SECRET
+    ?? process.env.NEXT_PUBLIC_SUPER_ADMIN_KEY
+  return !!secret && !!validKey && secret === validKey
 }
 
 export async function DELETE(

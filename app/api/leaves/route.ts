@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { data: profile } = await supabase
-    .from('users').select('school_id').eq('id', user.id).single()
+    .from('users').select('school_id, role').eq('id', user.id).single()
   if (!profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     .from('leave_applications')
     .select(`
       *,
-      student:students(full_name, roll_number, class_name, section),
+      student:students!inner(full_name, roll_number, class_name, section, parent_email),
       leave_type:leave_types(name, color, max_days)
     `)
     .eq('school_id', profile.school_id)
@@ -27,9 +27,34 @@ export async function GET(req: NextRequest) {
   if (status)    query = query.eq('status', status)
   if (studentId) query = query.eq('student_id', studentId)
 
+  if (profile.role === 'parent') {
+    query = query.eq('student.parent_email', user.email!)
+  } else if (profile.role === 'teacher') {
+    const { data: teacherRow } = await supabase.from('teachers').select('class_assigned').eq('email', user.email!).eq('school_id', profile.school_id).single()
+    if (!teacherRow?.class_assigned) return NextResponse.json([])
+    const { parseAllClassesAssigned } = await import('@/lib/teacherAccess')
+    const classes = parseAllClassesAssigned(teacherRow.class_assigned)
+    if (classes.length === 0) return NextResponse.json([])
+    query = query.in('student.class_name', classes.map(c => c.class_name))
+  }
+
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+
+  let finalData = data;
+  if (profile.role === 'teacher') {
+    const { data: teacherRow } = await supabase.from('teachers').select('class_assigned').eq('email', user.email!).eq('school_id', profile.school_id).single()
+    const { parseAllClassesAssigned } = await import('@/lib/teacherAccess')
+    const classes = parseAllClassesAssigned(teacherRow?.class_assigned ?? '')
+    finalData = (finalData ?? []).filter((item: any) =>
+      classes.some(c =>
+        c.class_name === item.student?.class_name &&
+        (!c.section || c.section === item.student?.section)
+      )
+    )
+  }
+
+  return NextResponse.json(finalData)
 }
 
 export async function POST(req: NextRequest) {

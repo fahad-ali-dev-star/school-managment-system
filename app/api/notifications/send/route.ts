@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
       .from('students')
       .select('full_name, roll_number, class_name, section, parent_name, parent_phone, parent_email')
       .eq('id', student_id)
+      .eq('school_id', profile.school_id)
       .single()
 
     if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 })

@@ -18,7 +18,10 @@ export async function GET(request: Request) {
     // Allow manual trigger with super admin secret
     const { searchParams } = new URL(request.url)
     const secret = searchParams.get('secret')
-    if (secret !== process.env.NEXT_PUBLIC_SUPER_ADMIN_KEY) {
+    const validKey = process.env.SUPER_ADMIN_KEY
+      ?? process.env.SUPER_ADMIN_SECRET
+      ?? process.env.NEXT_PUBLIC_SUPER_ADMIN_KEY
+    if (!secret || !validKey || secret !== validKey) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
   }

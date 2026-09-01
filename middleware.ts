@@ -62,12 +62,7 @@ export async function middleware(request: NextRequest) {
   const user = session?.user ?? null
 
   if (!user && !isPublic) {
-    const cachedRole = request.cookies.get('user-role')?.value
-    if (cachedRole) {
-      console.log('Middleware: Offline or session check failed, but user-role exists. Allowing through:', cachedRole)
-      return response
-    }
-    console.log('Middleware: No user, redirecting to /login from', pathname)
+    console.log('Middleware: No valid session, redirecting to /login from', pathname)
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
