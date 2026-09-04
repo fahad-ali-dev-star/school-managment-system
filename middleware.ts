@@ -224,5 +224,16 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon\\.ico|.*\\.png$).*)'],
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - manifest.json (PWA manifest)
+     * - sw.js, workbox-*, worker-* (service worker files)
+     * - Static asset extensions (.svg, .png, .jpg, .jpeg, .gif, .webp, .ico, .woff, .woff2, .ttf, .map)
+     */
+    '/((?!_next/static|_next/image|favicon\\.ico|manifest\\.json|sw\\.js|workbox-.*|worker-.*|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|map)$).*)',
+  ],
 }

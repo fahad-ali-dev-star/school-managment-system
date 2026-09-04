@@ -11,10 +11,20 @@ import { createClient } from './supabase/client'
 // Call this once on app load when online
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function syncAllDataFromSupabase(schoolId: string): Promise<void> {
+const SYNC_INTERVAL_MS = 15 * 60 * 1000 // 15 minutes
+
+export async function syncAllDataFromSupabase(schoolId: string, force = false): Promise<void> {
   if (typeof window === 'undefined') return
   if (!navigator.onLine) {
     console.log('[OfflineData] Offline — skipping initial sync, using cached IndexedDB data')
+    return
+  }
+
+  // Throttle full database syncs to once every 15 minutes unless forced
+  const syncKey = `sms_last_full_sync_${schoolId}`
+  const lastSync = localStorage.getItem(syncKey)
+  if (!force && lastSync && Date.now() - Number(lastSync) < SYNC_INTERVAL_MS) {
+    console.log('[OfflineData] Recent sync within 15m exists — skipping full download')
     return
   }
 
@@ -38,6 +48,7 @@ export async function syncAllDataFromSupabase(schoolId: string): Promise<void> {
     if (classes.data?.length)    await localDb.classes.bulkPut(classes.data)
     if (teachers.data?.length)   await localDb.teachers.bulkPut(teachers.data)
 
+    localStorage.setItem(syncKey, String(Date.now()))
     console.log('[OfflineData] Sync complete — all data available offline ✓')
   } catch (err) {
     console.error('[OfflineData] Sync failed:', err)

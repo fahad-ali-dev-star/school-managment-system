@@ -62,11 +62,15 @@ export default function AppInitializer() {
         // ✅ Persist school_id so offline boots can start the sync listener
         localStorage.setItem(SCHOOL_ID_KEY, schoolId)
 
-        // 1. Pull data from Supabase into IndexedDB (skipped automatically if offline)
-        await syncAllDataFromSupabase(schoolId)
-
-        // 2. Start listening for internet reconnect events
+        // 1. Start listening for internet reconnect events
         startSyncListener(schoolId)
+
+        // 2. Pull data into IndexedDB non-blockingly so page loads first
+        setTimeout(() => {
+          syncAllDataFromSupabase(schoolId).catch(err => {
+            console.warn('[AppInitializer] Background sync failed:', err)
+          })
+        }, 1500)
 
         console.log('[AppInitializer] Initialized for school:', schoolId)
       } catch (err) {

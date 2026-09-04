@@ -1,5 +1,8 @@
 // In-flight concurrency lock map to prevent simultaneous runs from generating duplicates
 const activeGenerations = new Map<string, Promise<void>>()
+// In-memory cache of recent checks to avoid querying the DB on every single dashboard load
+const lastCheckedAt = new Map<string, number>()
+const CHECK_COOLDOWN_MS = 1000 * 60 * 60 * 6 // 6 hours
 
 /**
  * Ensures monthly fee records exist for all active students of a school
@@ -12,6 +15,12 @@ export async function ensureCurrentMonthFees(supabase: any, schoolId: string) {
   const now = new Date()
   const monthLabel = now.toLocaleString('default', { month: 'long' }) + ' ' + now.getFullYear()
   const lockKey = `${schoolId}:${monthLabel}`
+
+  // If already checked recently in this process, skip DB round-trip
+  const lastCheck = lastCheckedAt.get(lockKey)
+  if (lastCheck && Date.now() - lastCheck < CHECK_COOLDOWN_MS) {
+    return
+  }
 
   if (activeGenerations.has(lockKey)) {
     return activeGenerations.get(lockKey)
@@ -58,6 +67,7 @@ export async function ensureCurrentMonthFees(supabase: any, schoolId: string) {
       const missingStudents = students.filter((s: any) => !alreadyHasFee.has(s.id))
 
       if (missingStudents.length === 0) {
+        lastCheckedAt.set(lockKey, Date.now())
         return
       }
 
@@ -100,6 +110,7 @@ export async function ensureCurrentMonthFees(supabase: any, schoolId: string) {
         await supabase.from('students').update({ fee_status: 'paid' }).in('id', paidStudentIds)
       }
 
+      lastCheckedAt.set(lockKey, Date.now())
       console.log(`[ensureCurrentMonthFees] Generated ${toInsert.length} fees & updated student statuses for ${monthLabel}`)
     } catch (err: any) {
       console.error('[ensureCurrentMonthFees] Fatal error:', err.message || err)
