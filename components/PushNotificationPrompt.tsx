@@ -65,6 +65,7 @@ export default function PushNotificationPrompt({
     setMessage(null)
 
     try {
+      // 1. Check or Request Notification Permission
       if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
         setPermissionState('denied')
         setShowHelp(true)
@@ -82,7 +83,7 @@ export default function PushNotificationPrompt({
       if (permission === 'denied') {
         setShowHelp(true)
         setMessage({
-          text: 'Notification permission was blocked. Please enable notifications in your browser settings to receive popups.',
+          text: 'Notification permission was blocked in your browser. Tap the lock/settings icon in the URL bar to allow notifications.',
           type: 'error',
         })
         setLoading(false)
@@ -91,28 +92,49 @@ export default function PushNotificationPrompt({
 
       if (permission !== 'granted') {
         setMessage({
-          text: 'Notifications were not allowed.',
+          text: 'Notifications permission was not granted.',
           type: 'info',
         })
         setLoading(false)
         return
       }
 
-      // Fetch public VAPID key
+      // 2. Fetch public VAPID key
       const keyRes = await fetch('/api/notifications/subscribe')
-      const { publicKey } = await keyRes.json()
+      const keyData = await keyRes.json()
 
-      if (!publicKey) {
-        throw new Error('VAPID public key not found')
+      if (!keyRes.ok || !keyData.publicKey) {
+        throw new Error(
+          keyData.error ||
+            'VAPID public key not found. Please ensure NEXT_PUBLIC_VAPID_PUBLIC_KEY is set in environment variables and the server has been redeployed.'
+        )
       }
 
-      const registration = await navigator.serviceWorker.ready
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey),
-      })
+      // 3. Ensure Service Worker is registered and active
+      let registration: ServiceWorkerRegistration | undefined
+      if ('serviceWorker' in navigator) {
+        registration = await navigator.serviceWorker.getRegistration()
+        if (!registration) {
+          registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        }
+        await navigator.serviceWorker.ready
+        registration = (await navigator.serviceWorker.getRegistration()) || (await navigator.serviceWorker.ready)
+      }
 
-      // Send subscription to server
+      if (!registration || !registration.pushManager) {
+        throw new Error('Push manager is not supported or service worker is unavailable on this device/browser.')
+      }
+
+      // 4. Create or reuse Push Subscription
+      let subscription = await registration.pushManager.getSubscription()
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(keyData.publicKey),
+        })
+      }
+
+      // 5. Send subscription to server database
       const res = await fetch('/api/notifications/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

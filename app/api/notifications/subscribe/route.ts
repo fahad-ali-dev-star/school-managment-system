@@ -1,10 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 import { getVapidPublicKey } from '@/lib/webPush'
 
 // ─── GET: Return Public VAPID Key ────────────────────────────────────────────
 export async function GET() {
   const publicKey = getVapidPublicKey()
+  if (!publicKey) {
+    return NextResponse.json(
+      { error: 'VAPID public key not found. Please set NEXT_PUBLIC_VAPID_PUBLIC_KEY in environment variables.' },
+      { status: 500 }
+    )
+  }
   return NextResponse.json({ publicKey })
 }
 
@@ -16,7 +23,7 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 })
   }
 
   const { data: profile } = await supabase
@@ -27,7 +34,7 @@ export async function POST(req: NextRequest) {
 
   const userEmail = profile?.email || user.email
   if (!userEmail) {
-    return NextResponse.json({ error: 'User email not found' }, { status: 400 })
+    return NextResponse.json({ error: 'User email not found.' }, { status: 400 })
   }
 
   const body = await req.json()
@@ -50,8 +57,9 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Upsert subscription into push_subscriptions table
-  const { error } = await supabase.from('push_subscriptions').upsert(
+  // Use Admin client to ensure RLS does not block saving subscription
+  const adminDb = createAdminClient()
+  const { error } = await adminDb.from('push_subscriptions').upsert(
     {
       user_id: user.id,
       school_id: profile?.school_id || null,
@@ -92,7 +100,8 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Endpoint is required' }, { status: 400 })
   }
 
-  const { error } = await supabase
+  const adminDb = createAdminClient()
+  const { error } = await adminDb
     .from('push_subscriptions')
     .delete()
     .eq('endpoint', endpoint)
@@ -103,3 +112,4 @@ export async function DELETE(req: NextRequest) {
 
   return NextResponse.json({ success: true })
 }
+
