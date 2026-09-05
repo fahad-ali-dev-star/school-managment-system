@@ -28,10 +28,25 @@ export default function ChangePasswordForm({ email, role }: { email: string; rol
     e.preventDefault()
     setError('')
     if (newPwd.length < 6) { setError('Password must be at least 6 characters.'); return }
+    if (newPwd.toLowerCase() === 'parent1122') {
+      setError('Cannot reuse the default weak password ("parent1122"). Please create a secure password.')
+      return
+    }
     if (newPwd !== confirmPwd) { setError('Passwords do not match.'); return }
     setSaving(true)
-    const { error: err } = await supabase.auth.updateUser({ password: newPwd })
+    const { error: err } = await supabase.auth.updateUser({
+      password: newPwd,
+      data: { is_default_password: false, password_updated_at: new Date().toISOString() }
+    })
     if (err) { setError(err.message); setSaving(false); return }
+    
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('has_weak_password')
+      sessionStorage.removeItem('dismissed_weak_pwd_alert')
+      document.cookie = 'weak-password=false; path=/; max-age=2592000; SameSite=Lax'
+      window.dispatchEvent(new Event('password-changed'))
+    }
+
     setSuccess(true); setNewPwd(''); setConfirm('')
     setSaving(false)
     setTimeout(() => setSuccess(false), 5000)
@@ -53,6 +68,15 @@ export default function ChangePasswordForm({ email, role }: { email: string; rol
             Email cannot be changed here. Contact admin to update your email.
           </p>
         </div>
+
+        {role === 'parent' && (
+          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '10px 14px', marginBottom: '1.25rem', display: 'flex', gap: 10, alignItems: 'center' }}>
+            <span style={{ fontSize: 18 }}>💡</span>
+            <p style={{ fontSize: 12.5, color: '#92400e', margin: 0, lineHeight: 1.4 }}>
+              <strong>Security Recommendation:</strong> If you are still using the default password, choose a new strong password with at least 8 characters (letters and numbers) to secure your portal.
+            </p>
+          </div>
+        )}
 
         {success && (
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '10px 14px', color: '#15803d', fontSize: 13, marginBottom: '1rem' }}>

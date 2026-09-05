@@ -3,6 +3,7 @@ import { getProfile } from '@/lib/supabase/getProfile'
 import Sidebar from '@/components/Sidebar'
 import ParentNotificationListener from '@/components/ParentNotificationListener'
 import PushNotificationPrompt from '@/components/PushNotificationPrompt'
+import WeakPasswordAlert from '@/components/WeakPasswordAlert'
 import type { AuthUser } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -25,6 +26,7 @@ export default async function ParentPortalLayout({ children }: { children: React
       <main style={{ flex: 1, overflow: 'auto', background: '#f8fafc' }}>
         <ParentNotificationListener userEmail={profile.email} />
         <div className="responsive-page-container" style={{ paddingBottom: 0, paddingTop: '1rem' }}>
+          <WeakPasswordAlert userEmail={profile.email} />
           <PushNotificationPrompt userEmail={profile.email} />
         </div>
         {children}

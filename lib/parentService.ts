@@ -37,6 +37,7 @@ export async function ensureParentAccount({
     email: cleanEmail,
     password: 'parent1122',
     email_confirm: true,
+    user_metadata: { is_default_password: true },
   })
 
   if (authErr) {

@@ -31,6 +31,19 @@ function LoginContent() {
     }
 
     if (data.session) {
+      // Check if password is default or weak
+      const isWeak = password === 'parent1122' || (password.length < 8 && roleSelection === 'parent')
+      if (typeof window !== 'undefined') {
+        if (isWeak) {
+          localStorage.setItem('has_weak_password', 'true')
+          sessionStorage.removeItem('dismissed_weak_pwd_alert')
+          document.cookie = `weak-password=true; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`
+        } else {
+          localStorage.removeItem('has_weak_password')
+          document.cookie = `weak-password=false; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`
+        }
+      }
+
       // Fetch role to redirect appropriately
       const supabase2 = createClient()
       const { data: profile } = await supabase2.from('users').select('role').eq('id', data.session.user.id).single()
@@ -124,6 +137,18 @@ function LoginContent() {
           </div>
         ) : (
           <>
+            {roleSelection === 'parent' && (
+              <div style={{
+                background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10,
+                padding: '10px 12px', marginBottom: '1.25rem', display: 'flex', gap: 10, alignItems: 'flex-start'
+              }}>
+                <span style={{ fontSize: 18, lineHeight: 1 }}>⚠️</span>
+                <div style={{ fontSize: 12.5, color: '#92400e', lineHeight: 1.45 }}>
+                  <strong>Security Alert:</strong> If you are signing in with the default password (<code>parent1122</code>), this password is weak. Please change it immediately after login to secure your child&apos;s records.
+                </div>
+              </div>
+            )}
+
             {error && (
               <div style={{
                 background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8,
