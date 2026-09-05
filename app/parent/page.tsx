@@ -14,13 +14,16 @@ export default async function ParentDashboard() {
   let recentAlerts: any[] = []
 
   try {
-    // Do NOT scope by school_id — parent accounts may have null/mismatched school_id.
-    // Matching by parent_email alone is sufficient and correct.
-    const { data } = await supabase.from('students')
+    let studentsQuery = supabase.from('students')
       .select('id, full_name, roll_number, class_name, section, fee_status, gender')
       .ilike('parent_email', profile.email)
       .eq('is_active', true)
-      .order('class_name')
+
+    if (profile.school_id) {
+      studentsQuery = studentsQuery.eq('school_id', profile.school_id)
+    }
+
+    const { data } = await studentsQuery.order('class_name')
     children = data ?? []
 
     const childIds = children.map(c => c.id)
@@ -29,6 +32,10 @@ export default async function ParentDashboard() {
     let query = supabase.from('notification_logs')
       .select('*, student:students(full_name)')
       .gte('created_at', since)
+
+    if (profile.school_id) {
+      query = query.eq('school_id', profile.school_id)
+    }
 
     if (childIds.length > 0 && profile.email) {
       query = query.or(`student_id.in.(${childIds.join(',')}),recipient.ilike.${profile.email}`)

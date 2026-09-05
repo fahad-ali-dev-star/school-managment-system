@@ -16,16 +16,16 @@ export async function ensureParentAccount({
 
   const admin = createAdminClient()
 
-  // 1. Check if user already exists in users table for this school
+  // 1. Check if user profile already exists by email
   const { data: existingUser } = await admin
     .from('users')
-    .select('id, full_name, email')
-    .eq('school_id', schoolId)
+    .select('id, full_name, email, school_id')
     .eq('email', cleanEmail)
     .maybeSingle()
 
   if (existingUser) {
-    if (existingUser.full_name !== cleanName) {
+    // Parent profile already exists — preserve existing school_id to avoid multi-school collision
+    if (!existingUser.full_name || existingUser.full_name !== cleanName) {
       await admin.from('users').update({ full_name: cleanName }).eq('id', existingUser.id)
     }
     return { id: existingUser.id, email: cleanEmail, full_name: cleanName }
@@ -56,18 +56,28 @@ export async function ensureParentAccount({
 
   if (!uid) return null
 
-  // 3. Upsert record into users table
-  const { error: userErr } = await admin.from('users').upsert({
-    id: uid,
-    school_id: schoolId,
-    full_name: cleanName,
-    email: cleanEmail,
-    role: 'parent',
-  })
+  // 3. Create or preserve record in users table without overwriting school_id
+  const { data: profileCheck } = await admin
+    .from('users')
+    .select('id, school_id')
+    .eq('id', uid)
+    .maybeSingle()
 
-  if (userErr) {
-    console.error('Error creating parent user profile:', userErr.message)
-    return null
+  if (!profileCheck) {
+    const { error: userErr } = await admin.from('users').insert({
+      id: uid,
+      school_id: schoolId,
+      full_name: cleanName,
+      email: cleanEmail,
+      role: 'parent',
+    })
+
+    if (userErr) {
+      console.error('Error creating parent user profile:', userErr.message)
+      return null
+    }
+  } else if (!profileCheck.school_id) {
+    await admin.from('users').update({ school_id: schoolId }).eq('id', uid)
   }
 
   return { id: uid, email: cleanEmail, full_name: cleanName }
